@@ -5,7 +5,6 @@
 
 use std::fs::File;
 use std::io::Read;
-use std::convert::TryInto;
 use std::fmt;
 
 struct Point {
@@ -13,10 +12,20 @@ struct Point {
 	y: i32,
 }
 
+enum Vertical {
+	X,
+	Y,
+}
+	
+struct Line {
+	length: i32,
+	dir: Vertical,
+}
+
 impl Point {
 	// Distance to a specific point
-	fn manhattan_dist(&self, other: &Point) -> u32 {
-		((self.x - other.x).abs() + (self.y - other.y).abs()).try_into().unwrap()
+	fn manhattan_dist(&self, other: &Point) -> i32 {
+		((self.x - other.x).abs() + (self.y - other.y).abs())
 	}
 }
 
@@ -27,88 +36,100 @@ impl fmt::Display for Point {
 }
 
 struct Wire {
-	points: Vec<Point>,
+	start: Point,
+	segments: Vec<Line>,
 }
 
 impl Wire {
 	fn new (path: &str) -> Wire {
-		let mut list = Vec::new();
-		let mut current_point = Point {x: 0, y: 0};
-		let mut x_delta = 0;
-		let mut y_delta = 0;
 		let steps = path.split(",");
+		let mut list = Vec::new(); // TODO: replace with with_capacity for runtime optimization
 		for step in steps {
 			let mut buf = step.chars();
-			match buf.next() {
-				Some('R') => x_delta = buf.as_str().parse::<u32>().unwrap() as i32,
-				Some('L') => x_delta = -(buf.as_str().parse::<u32>().unwrap() as i32),
-				Some('U') => y_delta = buf.as_str().parse::<u32>().unwrap() as i32,
-				Some('D') => y_delta = -(buf.as_str().parse::<u32>().unwrap() as i32),
-				_ => panic!("Not a valid move {}", buf.as_str())
-			}
-			if x_delta != 0 {
-				if x_delta < 0 {
-					while x_delta != 0 {
-						x_delta += 1;
-						current_point.x -= 1;
-						list.push(Point {x: current_point.x, y: current_point.y});
-					}
-				} else if x_delta > 0 {
-					while x_delta != 0 {
-						x_delta -= 1;
-						current_point.x += 1;
-						list.push(Point {x: current_point.x, y: current_point.y});
-					}
+			list.push(match buf.next() {
+				Some('R') => {
+					Line {length: buf.as_str().parse::<u32>().unwrap() as i32, dir: Vertical::X}
+				},
+				Some('L') => {
+					Line {length: -(buf.as_str().parse::<u32>().unwrap() as i32), dir: Vertical::X}
+				},
+				Some('U') => {
+					Line {length: buf.as_str().parse::<u32>().unwrap() as i32, dir: Vertical::Y}
+				},
+				Some('D') => {
+					Line {length: -(buf.as_str().parse::<u32>().unwrap() as i32), dir: Vertical::Y}
+				},
+				_ => {
+					panic!("Not a valid move {}", buf.as_str())
 				}
-			} else if y_delta != 0 {
-				if y_delta < 0 {
-					while y_delta != 0 {
-						y_delta += 1;
-						current_point.y -= 1;
-						list.push(Point {x: current_point.x, y: current_point.y});
-					}
-				} else if y_delta > 0 {
-					while y_delta != 0 {
-						y_delta -= 1;
-						current_point.y += 1;
-						list.push(Point {x: current_point.x, y: current_point.y});
-					}
-				}
-			} else {
-				panic!("Not a valid move");
-			}
+			});
+
 		}
-		Wire {points: list}
+
+		// hardcode start to be the origin
+		Wire {start: Point {x: 0, y: 0}, segments: list}
 	}
 
-	fn contains_point(&self, x: i32, y: i32) -> bool {
-		for pt in self.points.iter() {
-			if pt.x == x && pt.y == y {
-				return true;
-			}
-		}
-		false
-	}
-
-	// Suboptimal search for intersections in two wires, returns intersect points
+	// Search for intersections in two wires, returns intersect points
 	fn intersects(&self, other: &Wire) -> Vec<Point> {
+		use crate::Vertical::{X, Y};
 		let mut results: Vec<Point> = vec![];
+		let mut self_point = Point {x: self.start.x, y: self.start.y};
 
 		// Compare complete list of points in this wires path with complete list of points in others path
-		for pt in self.points.iter() {
-			if other.contains_point(pt.x, pt.y) {
-				results.push(Point {x: pt.x, y: pt.y});
+		for ln in self.segments.iter() {
+			let mut other_point = Point {x: other.start.x, y: other.start.y};
+
+			// Rather than check the direction of every self line and then other for each, just check the direction of other once
+			match ln.dir {
+				X => {
+					for other_ln in other.segments.iter() {
+						// Always update current point but only check for intersect if lines are orthogonal
+						match other_ln.dir {
+							X => other_point.x += other_ln.length,
+							Y => {
+								let x_range = self_point.x..(self_point.x + ln.length);
+								let y_range = other_point.y..(other_point.y + other_ln.length);
+								// IF other_ln is vertical, other_ln.x is in the range of x values covered by ln horizontal line, and ln horizontal line is in range of X values covered by us
+								if x_range.contains(&other_point.x) && y_range.contains(&self_point.y) {
+									results.push(Point {x: other_point.x, y: self_point.y}); // Simple geometry, use fixed X from vertical line and fixed Y from horizontal
+								}
+								other_point.y += other_ln.length;
+							}
+						}
+					}
+					self_point.x += ln.length;
+				},
+				Y => {
+					for other_ln in other.segments.iter() {
+						match other_ln.dir {
+							Y => other_point.y += other_ln.length,
+							X => {
+								let x_range = other_point.x..(other_point.x + other_ln.length); 
+								let y_range = self_point.y..(self_point.y + ln.length);
+								if x_range.contains(&self_point.x) && y_range.contains(&other_point.y) {
+									results.push(Point {x: self_point.x, y: other_point.y}); // See above
+								}
+								other_point.x += other_ln.length;
+							},
+						}
+
+					}
+					self_point.y += ln.length;
+				}
 			}
 		}
-
 		results
 	}
 }
 
 fn main() -> std::io::Result<()> {
-	let mut file = File::open("./input.txt")?;
-	let mut buf = String::new();
-	file.read_to_string(&mut buf)?;
+	let mut buf: String;
+	{
+		let mut file = File::open("./input.txt")?;
+		buf = String::new();
+		file.read_to_string(&mut buf)?;
+	}
 
 	let mut lines = buf.lines();
 
@@ -116,9 +137,16 @@ fn main() -> std::io::Result<()> {
 	let wire1 = Wire::new(lines.next().unwrap());
 	let wire2 = Wire::new(lines.next().unwrap());
 
+	let mut shortest_distance = std::i32::MAX;
 	for intersect in wire1.intersects(&wire2) {
-		println!("intersect: {}, distance to origin: {}", intersect, intersect.manhattan_dist(&Point {x: 0, y: 0}));
+		let dist_manhattan = intersect.manhattan_dist(&Point {x: 0, y: 0});
+		println!("intersect: {}, distance to origin: {}", intersect, dist_manhattan);
+
+		if dist_manhattan < shortest_distance {shortest_distance = dist_manhattan};
 	}
+
+	// Part 1
+	println!("Shortest Distance by Manhattan measurement: {}", shortest_distance);
 
 	Ok(())
 }
