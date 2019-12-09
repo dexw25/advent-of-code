@@ -7,16 +7,19 @@ use std::fs::File;
 use std::io::Read;
 use std::fmt;
 
+#[derive(PartialEq, Eq, Hash, Copy, Clone)]
 struct Point {
 	x: i32,
 	y: i32,
 }
 
+#[derive(Debug)]
 enum Vertical {
 	X,
 	Y,
 }
-	
+
+#[derive(Debug)]
 struct Line {
 	length: i32,
 	dir: Vertical,
@@ -24,8 +27,8 @@ struct Line {
 
 impl Point {
 	// Distance to a specific point
-	fn manhattan_dist(&self, other: &Point) -> i32 {
-		((self.x - other.x).abs() + (self.y - other.y).abs())
+	fn manhattan_dist(&self, other: &Point) -> u32 {
+		((self.x - other.x).abs() + (self.y - other.y).abs()) as u32
 	}
 }
 
@@ -43,7 +46,7 @@ struct Wire {
 impl Wire {
 	fn new (path: &str) -> Wire {
 		let steps = path.split(",");
-		let mut list = Vec::new(); // TODO: replace with with_capacity for runtime optimization
+		let mut list = Vec::new(); // could replace with with_capacity for runtime optimization but getting the length of the wire also has a cost at this point
 		for step in steps {
 			let mut buf = step.chars();
 			list.push(match buf.next() {
@@ -83,32 +86,36 @@ impl Wire {
 			// Rather than check the direction of every self line and then other for each, just check the direction of other once
 			match ln.dir {
 				X => {
+					// Negative ranges don't work, swap order if start is less than end
+					let x_range = if ln.length > 0 {self_point.x..=(self_point.x + ln.length)} else {(self_point.x + ln.length)..=self_point.x};
 					for other_ln in other.segments.iter() {
 						// Always update current point but only check for intersect if lines are orthogonal
 						match other_ln.dir {
 							X => other_point.x += other_ln.length,
 							Y => {
-								let x_range = self_point.x..(self_point.x + ln.length);
-								let y_range = other_point.y..(other_point.y + other_ln.length);
+								let y_range = if other_ln.length > 0 {other_point.y..=(other_point.y + other_ln.length)} else {(other_point.y + other_ln.length)..=other_point.y};
 								// IF other_ln is vertical, other_ln.x is in the range of x values covered by ln horizontal line, and ln horizontal line is in range of X values covered by us
 								if x_range.contains(&other_point.x) && y_range.contains(&self_point.y) {
-									results.push(Point {x: other_point.x, y: self_point.y}); // Simple geometry, use fixed X from vertical line and fixed Y from horizontal
+									let p = Point {x: other_point.x, y: self_point.y};
+									if p.x != 0 && p.y != 0 {results.push(p);} // Simple geometry, use fixed X from vertical line and fixed Y from horizontal, ignore origin
 								}
 								other_point.y += other_ln.length;
-							}
+							},
 						}
 					}
 					self_point.x += ln.length;
 				},
 				Y => {
+					// Negative ranges don't work, swap order if start is less than end
+					let y_range = if ln.length > 0 {self_point.y..=(self_point.y + ln.length)} else {(self_point.y + ln.length)..=self_point.y};
 					for other_ln in other.segments.iter() {
 						match other_ln.dir {
 							Y => other_point.y += other_ln.length,
 							X => {
-								let x_range = other_point.x..(other_point.x + other_ln.length); 
-								let y_range = self_point.y..(self_point.y + ln.length);
+								let x_range = if other_ln.length > 0 {other_point.x..=(other_point.x + other_ln.length)} else {(other_point.x + other_ln.length)..=other_point.x}; 
 								if x_range.contains(&self_point.x) && y_range.contains(&other_point.y) {
-									results.push(Point {x: self_point.x, y: other_point.y}); // See above
+									let p = Point {x: self_point.x, y: other_point.y};
+									if p.x != 0 && p.y != 0 {results.push(p);} // Simple geometry, use fixed X from vertical line and fixed Y from horizontal, ignore origin
 								}
 								other_point.x += other_ln.length;
 							},
@@ -121,14 +128,101 @@ impl Wire {
 		}
 		results
 	}
+
+	// Calculate the length to the given point along the path of the wire, should probably check here if the point is on the wire
+	fn path_to(&self, target: &Point) -> u32 {
+		use crate::Vertical::{X, Y};
+		let mut current_point = Point {x: self.start.x, y: self.start.y}; // start at origin, not counted as a step
+		let mut total_steps: u32 = 0;
+		for ln in self.segments.iter() {
+			match ln.dir {
+				X => {
+					let mut x_left = ln.length;
+					while x_left != 0 {
+						if x_left > 0 {
+							current_point.x += 1;
+							x_left -= 1;
+						} else {
+							current_point.x -= 1;
+							x_left += 1;
+						}
+						total_steps += 1;
+						if current_point == *target {return total_steps;}
+					}
+				},
+				Y => {
+					let mut y_left = ln.length;
+					while y_left != 0 {
+						if y_left > 0 {
+							current_point.y += 1;
+							y_left -= 1;
+						} else {
+							current_point.y -= 1;
+							y_left += 1;
+						}
+						total_steps += 1;
+						if current_point == *target {return total_steps;}
+					}
+				},
+			}
+		}
+		total_steps
+	}
+
+/* The following dead code existed to eliminate loops in the path because I misread the problem statement. Keeping it around because I worked hard on it and don't want to delete
+ It depends on a method existing to get the full list of points which could be implemented simply enough
+	// Calculate path distance to a point, discount loops and do not include that point
+	fn path_to(&self, target: &Point) -> u32 {
+		let mut pt_idx = 0;
+
+		let mut points = self.as_points();
+
+		// Search for input point
+		for (i, pt) in points.iter().enumerate() {
+			if pt == target {
+				break;
+			}
+		}
+
+		// If this is true then the point passed was not in the path of this wire
+		assert_ne!(pt_idx+1, points.len());
+
+		// Convert the path as we have see it to a hash set to optimize lookups, since we do one per point of naive path and a linear search for that would suck
+		let mut pts_hash = HashSet::new();
+		points.resize(pt_idx+1, *target); // Truncate all points after the target
+		let mut i:usize = 0;
+
+		while i < pt_idx {
+			// insert() returns false if the value was already present
+			if !pts_hash.insert(points[i]) {
+				let cross_idx = i;
+				let cross_pt = points.remove(i); // Save cross and remove
+				i -= 1;
+				while points[i] != cross_pt {
+					pts_hash.remove(&points[i]);
+					// points.remove(i); // use drain below, more optimal for removing a whole range at once
+					i -= 1;
+				}
+				// i now points to the first crossing of the intersect above
+				points.drain(i+1..cross_idx); // cross was removed above so use exclusive range here
+				pt_idx -= cross_idx - i; // we removed this many from the set
+				i += 1;
+			}
+			i += 1;
+		}
+
+		points.len() as u32
+		
+	}*/
 }
 
-fn main() -> std::io::Result<()> {
+// Feed input text files into the classes above and rank the output
+fn find_crossings(path: &str) -> (u32, u32) {
 	let mut buf: String;
 	{
-		let mut file = File::open("./input.txt")?;
+		let mut file = File::open(path).unwrap();
 		buf = String::new();
-		file.read_to_string(&mut buf)?;
+		file.read_to_string(&mut buf).unwrap();
 	}
 
 	let mut lines = buf.lines();
@@ -137,16 +231,32 @@ fn main() -> std::io::Result<()> {
 	let wire1 = Wire::new(lines.next().unwrap());
 	let wire2 = Wire::new(lines.next().unwrap());
 
-	let mut shortest_distance = std::i32::MAX;
+	let mut shortest_distance = std::u32::MAX;
+	let mut shortest_path = std::u32::MAX;
 	for intersect in wire1.intersects(&wire2) {
-		let dist_manhattan = intersect.manhattan_dist(&Point {x: 0, y: 0});
-		println!("intersect: {}, distance to origin: {}", intersect, dist_manhattan);
+		let dist_manhattan = intersect.manhattan_dist(&wire1.start);
+		let dist_path = wire1.path_to(&intersect) + wire2.path_to(&intersect); // path calculation from both not including the intersection itself, hence +1
 
 		if dist_manhattan < shortest_distance {shortest_distance = dist_manhattan};
+		if dist_path < shortest_path {shortest_path = dist_path};
 	}
 
-	// Part 1
-	println!("Shortest Distance by Manhattan measurement: {}", shortest_distance);
+	(shortest_distance, shortest_path)
+}
+
+fn main() -> std::io::Result<()> {
+
+	// Cribbed from example inputs and results
+	assert_eq!(find_crossings("./test0.txt"), (6, 30));
+	assert_eq!(find_crossings("./test1.txt"), (159, 610));
+	assert_eq!(find_crossings("./test2.txt"), (135, 410));
+
+	println!("Tests Passed!!");
+
+	let distances = find_crossings("./input.txt");
+
+	println!("Part 1 solution: Manhattan Distance = {}", distances.0);
+	println!("Part 2 solution: Path Distance = {}", distances.1);
 
 	Ok(())
 }
