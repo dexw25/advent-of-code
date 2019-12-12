@@ -2,9 +2,10 @@
 use std::collections::HashMap;
 use std::fs::File;
 use std::io::Read;
+use std::string::String;
 
-fn count_links(path: &str) -> u32 {
-	let mut buf: String;
+fn init_tree(path: &str) -> HashMap<String, String> {
+		let mut buf: String;
 	{
 		let mut file = File::open(path).unwrap();
 		buf = String::new();
@@ -19,21 +20,25 @@ fn count_links(path: &str) -> u32 {
 		let mut rel = l.split(")");
 		let parent = rel.next().unwrap();
 		let child = rel.next().unwrap();
-		rels.insert(child, parent);
+		rels.insert(child.to_string(), parent.to_string());
 	}
+	rels
+}
+
+fn count_links(rels: &HashMap<String, String>) -> u32 {
 
 	// Calculate total number of links, walk the tree and sum the number of steps for each leaf
 	let mut result:u32 = 0;
 	for k in rels.keys() {
 		let mut node = k.clone();
 		loop {
-			match rels.get(node) {
+			match rels.get(&node) {
 			Some(val) => {
 				result += 1;
 				if *val == "COM" {
 					break
 				} else {
-					node = val;
+					node = val.to_string();
 				}
 			}, 
 			None => panic!("Key {} has no parent", k),
@@ -43,13 +48,23 @@ fn count_links(path: &str) -> u32 {
 	result
 }
 
+fn min_path(a_node: &str, b_node: &str, tree: &HashMap<String, String>) -> u32 {
+	0
+}
+
 fn main() -> std::io::Result<()> {
 	
 	// test case
-	assert_eq!(count_links("./test0.txt"), 42);
-
+	{
+		let map = init_tree("./test0.txt");
+		assert_eq!(count_links(&map), 42);
+	}
 	// Do the work
-	println!("Part 1 answer: {}", count_links("./input.txt"));
+	let map = init_tree("./input.txt");
+	println!("Part 1 answer: {}", count_links(&map));
+
+	// Part 2
+	println!("Part 2 answer: {}", min_path("YOU", "SAN", &map));
 
 	Ok(())
 }
