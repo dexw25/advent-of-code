@@ -1,5 +1,6 @@
 // Orbit tree problem, store orbit relations in a hash map
 use std::collections::HashMap;
+use std::collections::HashSet;
 use std::fs::File;
 use std::io::Read;
 use std::string::String;
@@ -25,11 +26,12 @@ fn init_tree(path: &str) -> HashMap<String, String> {
 	rels
 }
 
-fn count_links(rels: &HashMap<String, String>) -> u32 {
 
+fn count_links(rels: &HashMap<String, String>) -> u32 {
 	// Calculate total number of links, walk the tree and sum the number of steps for each leaf
 	let mut result:u32 = 0;
 	for k in rels.keys() {
+		// just like find_path below but all this scope cares about is distance to COM, not the actual nodes in the path
 		let mut node = k.clone();
 		loop {
 			match rels.get(&node) {
@@ -48,16 +50,43 @@ fn count_links(rels: &HashMap<String, String>) -> u32 {
 	result
 }
 
-fn min_path(a_node: &str, b_node: &str, tree: &HashMap<String, String>) -> u32 {
-	0
+// Input has no loops, find the closest parent common to A and B and the shortest path is the sum of each node's path to that parent
+fn min_path(a_node: &str, b_node: &str, tree: &HashMap<String, String>) -> usize {
+	// closure to generate set of nodes in path between a given leaf and COM
+	let find_path = |a: &str| -> HashSet<&String> {
+		let mut path = HashSet::new();
+		let mut node = a.to_string();
+		loop {
+			match tree.get(&node) {
+				Some(val) => {
+					path.insert(val);
+					if *val == "COM" {
+						break
+					} else {
+						node = val.to_string();
+					}
+				},
+				None => panic!("Key {} not related to COM", a),
+			}
+		}
+		path
+	};
+
+	// Full paths cached, leaf to root
+	let a_set = find_path(a_node);
+	let b_set = find_path(b_node);
+
+	let nodes_in_path: HashSet<_> = a_set.symmetric_difference(&b_set).collect();
+	nodes_in_path.len() // all nodes in this set constitute the path, counting them provides the number of branches to traverse
 }
 
 fn main() -> std::io::Result<()> {
 	
-	// test case
+	// test cases
 	{
-		let map = init_tree("./test0.txt");
-		assert_eq!(count_links(&map), 42);
+		assert_eq!(count_links(&init_tree("./test0.txt")), 42);
+
+		assert_eq!(min_path("YOU", "SAN", &init_tree("./test1.txt")), 4);
 	}
 	// Do the work
 	let map = init_tree("./input.txt");
