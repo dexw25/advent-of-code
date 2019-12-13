@@ -58,7 +58,7 @@ impl Opcodes {
 
 // Closures etc could make this much much cleaner I might come back and clean it up later 
 impl IntcodeComp {
-	fn new (prog: &Vec<i64>) -> IntcodeComp {
+	pub fn new (prog: &Vec<i64>) -> IntcodeComp {
 		let mem = prog.clone(); // Make a mutable clone of the program to work on in local memory
 		let pc = 0;
 		let i = VecDeque::new();
@@ -167,16 +167,16 @@ impl IntcodeComp {
 		&self.mem_space
 	}
 
-	fn input(&mut self, i: i64) {
+	pub fn input(&mut self, i: i64) {
 		self.in_buf.push_back(i);
 	}
 
-	fn output(&mut self) -> Option<i64> {
+	pub fn output(&mut self) -> Option<i64> {
 		self.out_buf.pop_front()
 	}
 
 	// Convenience method to run until either a halt command or the core is starved of input
-	fn run_all(&mut self) {
+	pub fn run_all(&mut self) {
 		// starvation must occur twice
 		let mut starved = false;
 		loop {
@@ -201,7 +201,7 @@ impl IntcodeComp {
 	// Memory access macros
 	// Closures for common repeated operations (using closures to save on suuuper repetitive argument passing)
 	fn addr_mode(dig: Option<&u8>) -> AddressMode {
-		use AddressMode::*;
+		use self::AddressMode::*;
 		match dig {
 			Some(&2) => Relative,
 			Some(&1) => Immediate,
@@ -211,7 +211,7 @@ impl IntcodeComp {
 	}
 
 	fn op_fetch(&mut self, mode: AddressMode, pc_off: usize) -> i64{
-		use AddressMode::*;
+		use self::AddressMode::*;
 		match mode {
 			Positional => {
 				let ptr:usize = self.mem_space[self.program_counter+pc_off].try_into().unwrap();
@@ -236,7 +236,7 @@ impl IntcodeComp {
 
 	// very similar to op_fetch except for data direction and immediate is not supported
 	fn write_back(&mut self, mode: AddressMode, pc_off: usize, data: i64) {
-		use AddressMode::*;
+		use self::AddressMode::*;
 		match mode {
 			Positional => {
 				let ptr = self.mem_space[self.program_counter+pc_off] as usize;
@@ -260,7 +260,7 @@ impl IntcodeComp {
 	}
 
 	// Implementation of the computer generalized, call to evaluate until output, return is true if continued execution is a thing, or false if the program has halted
-	fn eval_async(&mut self) -> bool{
+	pub fn eval_async(&mut self) -> bool{
 		// Push least significant digit first, then rest into array of digits for decoding
 		fn decompose(n: &i64, digits: &mut Vec<u8>) {
 			digits.push((n % 10) as u8);
@@ -293,7 +293,7 @@ impl IntcodeComp {
 			// -Fetch
 			// -Operate
 			// -Writeback
-			use Opcodes::*;
+			use self::Opcodes::*;
 			match Opcodes::from_usize(opcode) {
 				Add => {
 					// Operand fetch
