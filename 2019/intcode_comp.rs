@@ -165,7 +165,7 @@ impl IntcodeComp {
 		Ok(())
 	}
 
-	fn _int_mem(&self) -> &Vec<i64>{
+	pub fn _int_mem(&self) -> &Vec<i64>{
 		&self.mem_space
 	}
 
@@ -340,6 +340,7 @@ impl IntcodeComp {
 
 					// output consumes 2 ints
 					self.program_counter += 2;
+					return true;
 				},
 				Jnz => { // jump if true (if input operand is nonzero)
 					// Operand fetch, same as math instructions plus logic for jump
