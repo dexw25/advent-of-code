@@ -37,5 +37,18 @@ fn main() -> std::io::Result<()> {
 
 	println!("BOOST output: {:?}", comp_out);
 
+	// Reinit for second program run
+	comp = IntcodeComp::new(&prog);
+	comp.input(2); // Select sensor boost mode
+	comp.run_all();
+	comp_out = Vec::new();
+	loop {
+		match comp.output() {
+			Some(val) => comp_out.push(val),
+			None => break,
+		};
+	}
+	println!("Ceres coordinates: {:?}", comp_out);
+
 	Ok(())
 }
