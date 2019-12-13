@@ -5,6 +5,8 @@
 use std::fs::File;
 use std::io::Read;
 use std::convert::TryInto;
+mod intcode_comp;
+use intcode_comp::IntcodeComp;
 
 fn main() -> std::io::Result<()> {
 	// Open file
@@ -17,27 +19,12 @@ fn main() -> std::io::Result<()> {
 	let mut mem_space = Vec::new(); // Could use with_capacity here for a speed optimization
 	for i in ops {
 		// Parse as int and push all found values into mem_space, ignore not-ints with a warning(split gives us one white space at the end so this will be ignored)
-		match i.parse::<u32>() {
+		match i.parse::<i64>() {
 			Ok(num) => mem_space.push(num),
 			Err(e) => println!("Warning: {}", e),
 		}
 	}
 
-	// First some test cases
-	{
-		let mut test_space1 = vec![1, 0, 0, 0, 99];
-		let mut test_space2 = vec![2, 3, 0, 3, 99];
-		let mut test_space3 = vec![2,4,4,5,99,0];
-		let mut test_space4 = vec![1,1,1,4,99,5,6,0,99];
-		rocket_computer(&mut test_space1);
-		rocket_computer(&mut test_space2);
-		rocket_computer(&mut test_space3);
-		rocket_computer(&mut test_space4);
-		assert_eq!(test_space1, [2, 0, 0, 0, 99]);
-		assert_eq!(test_space2, [2, 3, 0, 6, 99]);
-		assert_eq!(test_space3, [2,4,4,5,99,9801]);
-		assert_eq!(test_space4, [30,1,1,4,2,5,6,0,99]);
-	}
 
 	// Part 1
 	println!("Verb: 12, Noun: 02 => {}", computer_result(&mem_space, 12, 2));
@@ -61,18 +48,20 @@ fn main() -> std::io::Result<()> {
 
 
 // Add in program/verb: noun abstraction and wrap the core below
-fn computer_result(program: &Vec<u32>, noun: u32, verb: u32) -> u32 {
+fn computer_result(program: &Vec<i64>, noun: i64, verb: i64) -> i64 {
 	let mut mem_space = program.to_vec(); // Make a mutable copy of the program to work in
 	mem_space[1] = noun;
 	mem_space[2] = verb;
 
 	// Run the core until it terminates itself
-	rocket_computer(&mut mem_space);
+	let mut comp = IntcodeComp::new(&mem_space);
+	comp.run_all();
 
 	// memory value 0 is the result
-	mem_space[0]
+	comp._int_mem()[0]
 }
 
+/* Keeping this aroud for posterity
 // Implementation of the computer generalized, mem_space is borrowed mutably
 fn rocket_computer(mem_space: &mut Vec<u32>){
 	let mut program_counter = 0;
@@ -96,4 +85,4 @@ fn rocket_computer(mem_space: &mut Vec<u32>){
 		}
 		program_counter += 4;
 	}
-}
+}*/
