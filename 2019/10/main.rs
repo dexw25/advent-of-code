@@ -5,9 +5,77 @@ use std::fmt;
 use std::convert::TryInto;
 // use std::iter::FromIterator;
 
+// Helper function to break down slope to minimal factors for tracing rays on a grid
+fn minimize_slope (x_slope: i32, y_slope: i32) -> (i32, i32) {
+	// Handle simple edge cases first with early returns
+	if x_slope == 0 && y_slope == 0 {
+		(0, 0)
+	}else if x_slope == 0 {
+		// Horizontal line
+		(0, if y_slope > 0 {1} else {-1})
+	} else if y_slope == 0 {
+		// Vertical line
+		(if x_slope > 0 {1} else {-1}, 0)
+	} else {
+		// Most complicated case, find the greatest common factor of the two components of the vector
+		let mut gcf:i32 = if x_slope > y_slope {y_slope.abs()} else {x_slope.abs()};
+
+		// Loop until GCF is 1 (irreducible) or it evenly divides both args
+		while x_slope % gcf != 0 || y_slope % gcf != 0 && gcf > 1{
+			gcf -= 1;
+			assert_ne!(gcf, 0);
+		}
+
+		(x_slope / gcf, y_slope / gcf)
+	}
+}
+
+// Data for each asteroid, derive sort from angle, then occlusions.
+#[derive(PartialOrd, PartialEq, Debug)]
+struct Rock {
+	// Vague polar representation, angle and the number of occlusions are enough to get the order these will be lasered in
+	angle: f32,
+	occlusions: u32, // Number of rocks that occlude this rock
+	coord: (i32, i32),
+}
+
+impl Rock {
+	// Calculate angle and occlusions from origin and field
+	fn new(origin: &(i32, i32), field: &Field, coord: &(i32, i32)) -> Rock {
+		// Vector to coord from origin for the purposes of calculating angles
+		let x: f32 = (coord.0 - origin.0) as f32; //
+		let y: f32 = (coord.1 - origin.1) as f32;
+
+		// Calculate the angle of the origin vector
+		let mut angle = y.atan2(x); 
+
+		// Apply some convenience transformations
+		// 12:00 starts at -pi/2
+		if angle >= -(std::f32::consts::FRAC_PI_2) {
+			// Rotate points above this range by pi/2
+			angle += std::f32::consts::FRAC_PI_2;
+		} else {
+			// Points that would be negative after the above transformation range [-pi:-pi/2], translate to [3pi/2:2pi]
+			angle += std::f32::consts::PI * 2.0 + std::f32::consts::FRAC_PI_2;
+		}
+
+		// derive occlusion count (Could use angle information calculated above here, but this is simpler given the solution already existed)
+		let occ = field.may_occlude(origin, coord);
+		let diff: HashSet<_> = field.rocks.intersection(&occ).collect();
+		let count = diff.len();
+
+		Rock {
+			angle: angle,
+			occlusions: count as u32,
+			coord: *coord
+		}
+	}
+}
+
+
 // Asteroid field representation, a hash set of all of the asteroid coordinates
 struct Field {
-	rocks: HashSet<(i32, i32)>, // (x, y)
+	rocks: HashSet<(i32, i32)>,
 	x_max: i32,
 	y_max: i32
 }
@@ -55,54 +123,83 @@ impl Field {
 		ret
 	}
 
-	// Return a list of points occluded by 'point' when looking from 'origin'
+	// add to a set of points occluded by 'point' when looking from 'origin' (set is &mut to optimize calling function slightly since this is called a lot)
 	fn occluded_by(&self, origin: &(i32, i32), point: &(i32, i32), o_set: &mut HashSet<(i32, i32)>){
-		// Rise and Run initial slope (must reduce to get set of all occluded points)
-		let x_slope: i32 = point.0 - origin.0;
-		let y_slope: i32 = point.1 - origin.1;
-		let x_minslope: i32;
-		let y_minslope: i32;
-
-		// Handle simple edge cases first
-		if x_slope == 0 {
-			assert_ne!(y_slope, 0); // y_slope cannot be zero here, then we would be checking for occludes between a point and itself which has no meaning
-			x_minslope = 0;
-			y_minslope = if y_slope > 0 {1} else {-1};
-		} else if y_slope == 0 {
-			x_minslope = if x_slope > 0 {1} else {-1};
-			y_minslope = 0;
-		} else if x_slope.abs() == 1 {
-			x_minslope = if x_slope > 0 {1} else {-1};
-			y_minslope = y_slope;
-		} else if y_slope.abs() == 1 {
-			x_minslope = x_slope;
-			y_minslope = if y_slope > 0 {1} else {-1};
-		} else {
-			// Most complicated case, find the greatest common factor of the two components of the vector
-			let mut gcf:i32 = if x_slope > y_slope {y_slope.abs()} else {x_slope.abs()};
-
-			// Search for greatest common factor, this is fast enough for small numbers
-			while x_slope % gcf != 0 || y_slope % gcf != 0 {
-				gcf -= 1;
-				assert_ne!(gcf, 0);
-			}
-
-			x_minslope = x_slope / gcf;
-			y_minslope = y_slope / gcf;
-		}
+		let (x_slope, y_slope) = minimize_slope(point.0 - origin.0, point.1 - origin.1);
 		
 		// Initial condition, walk out from point
 		let mut x = point.0;
 		let mut y = point.1;
 
 		// Trace the path, break when falling off the map
-
 		loop {
-			x += x_minslope;
-			y += y_minslope;
+			x += x_slope;
+			y += y_slope;
 			if x > self.x_max || x < 0 || y > self.y_max || y < 0 {break};
 			o_set.insert((x, y));
 		}
+	}
+
+	// Return a set of points that may occlude the point 
+	fn may_occlude(&self, origin: &(i32, i32), point: &(i32, i32)) -> HashSet<(i32, i32)> {
+		let mut ret: HashSet<(i32, i32)> = HashSet::new();
+		// Like above, except we reverse the order since we want to trace the ray back to the origin
+		let (x_slope, y_slope) = minimize_slope(origin.0 - point.0, origin.1 - point.1);
+		
+		// Initial condition, walk in from point
+		let mut x = point.0;
+		let mut y = point.1;
+
+		// Trace the path, break when reached origin (do not push origin)
+		loop {
+			x += x_slope;
+			y += y_slope;
+			if x == origin.0 && y == origin.1 {break};
+			ret.insert((x, y));
+		}
+		ret
+	}
+
+	// Return a list of the order of rocks that will be lasered
+	fn laser_order(&self, origin: &(i32, i32), max_len: usize) -> Vec<(i32, i32)> {
+		// Result
+		let mut ret: Vec<(i32, i32)> = Vec::with_capacity(self.rocks.len()-1); // All rocks will be removed less the one we are perched on (@origin)\
+		let mut temp: Vec<(Rock)> = Vec::with_capacity(self.rocks.len()-1);
+
+		// Build list of rocks sorted by angle then by occlusions
+		for r in self.rocks.iter() {
+			// Skip over origin point
+			if r != origin {
+				temp.push(Rock::new(origin, self, &r));
+			}
+		}
+
+		// Keep a running set of rocks we have destroyed
+		let mut destroyed: HashSet<(i32, i32)> = HashSet::new();
+
+		// Sort rocks
+		let temp_len = temp.len();
+		let mut temp_slice = temp.as_mut_slice();
+		temp_slice.sort_by(|a, b| a.partial_cmp(b).unwrap());
+
+		// Iterate through temp and push into ret until there are none left (or max length is satisfied)
+		while temp_len > ret.len() && ret.len() < max_len {
+			// Iterate over all rocks, pushing unoccluded rocks into ret, and assuming that on each pass through an occluded rock has one of its occlusions blasted
+			for val in temp_slice.iter() {
+				if val.occlusions == 0 {
+					if destroyed.insert(val.coord) {
+						ret.push(val.coord);
+					}
+				}
+			}
+			// Update occlusions (assuming all occlusions get decremented on each pass around)
+			for i in 0..temp_slice.len() {
+				if temp_slice[i].occlusions > 0 {
+					temp_slice[i].occlusions -= 1;
+				}
+			}
+		}
+		ret
 	}
 }
 
@@ -112,7 +209,7 @@ impl fmt::Display for Field {
 			for x in 0..=self.x_max {
 				write!(f, "{}", match self.rocks.contains(&(x, y)) {
 					true => "#",
-					false => ".",// whitespace for not-asteroids
+					false => ".",// should be visually distinct enough
 				})?;
 			}
 			writeln!(f, "")?; // newlines in between each row
@@ -132,7 +229,7 @@ fn main() -> std::io::Result<()> {
 		f = Field::new(&buf);
 	}	
 
-	println!("Input map: \n{}", f);
+	// println!("Input map: \n{}", f);
 
 	// Find the point with the most points visible from it
 	let mut best_rock: (i32, i32) = (0,0);
@@ -147,6 +244,10 @@ fn main() -> std::io::Result<()> {
 	}
 
 	println!("Best count is {} at ({}, {})", best_count, best_rock.0, best_rock.1);
+
+	// For the best rock, get the 200th asteroid to be lasered
+	let order = f.laser_order(&best_rock, 200);
+	println!("200th rock to be lasered is {:?}", order[199]);
 
 	Ok(())
 }
