@@ -326,6 +326,7 @@ impl IntcodeComp {
 					self.program_counter += 4;
 				},
 				Input => { // input
+					// Match here only returns if input is needed but not available, to allow calling function to give us more
 					match self.in_buf.pop_front() {
 						Some(val) => self.write_back(l_imm, 1, val),
 						None => return true,
@@ -340,7 +341,7 @@ impl IntcodeComp {
 
 					// output consumes 2 ints
 					self.program_counter += 2;
-					return true;
+					// return true; // comment out so that the CPU only pauses on input
 				},
 				Jnz => { // jump if true (if input operand is nonzero)
 					// Operand fetch, same as math instructions plus logic for jump
