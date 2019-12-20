@@ -2,12 +2,12 @@ mod intcode_comp;
 use intcode_comp::IntcodeComp;
 use std::fs;
 use std::collections::HashMap;
-// use std::convert::TryInto;
+use std::fmt;
 
 #[derive(Copy, Clone)]
 enum Color {
-	Black=0,
-	White=1
+	Black,
+	White
 }
 
 // Convert from i64 to colors
@@ -21,17 +21,23 @@ impl From<i64> for Color {
 	}
 }
 
-// State of the ship
+// State of the ship, simply the default color and a map of the tiles that have been painted
 struct Ship {
 	def_color: Color, // Default color
 	tiles: HashMap<(i32, i32), Color>,// hash map, maps coord tuple to colors
 }
 
+// Ship implementation provides getters and setters for individual tiles and a format method
 impl Ship {
-	fn new(def: Color) -> Ship {
+	fn new(def: Color, first_tile: Option<Color>) -> Ship {
+		let mut t = HashMap::new();
+		match first_tile {
+			Some(c) => t.insert((0, 0), c),
+			None => None
+		};
 		Ship {
 			def_color: def,
-			tiles: HashMap::new()
+			tiles: t
 		}
 	}
 
@@ -40,7 +46,7 @@ impl Ship {
 		self.tiles.len()
 	}
 
-	// get current color, return painted value if it exists else default
+	// get color of a tile, return painted value if it exists else default
 	fn get_color(&self, coord: &(i32, i32)) -> Color {
 		match self.tiles.get(coord) {
 			Some(c) => *c,
@@ -48,24 +54,62 @@ impl Ship {
 		}
 	}
 
-	// Update tile with color
+	// paint a tile
 	fn set_color(&mut self, coord: (i32, i32), color: Color) {
 		self.tiles.insert(coord, color);
 	}
+
+	// Derive size of grid by searching points that have been painted
+	fn dimensions(&self) -> (i32, i32, i32, i32) {
+		let mut x_min = std::i32::MAX;
+		let mut x_max = std::i32::MIN;
+		let mut y_min = std::i32::MAX;
+		let mut y_max = std::i32::MIN;
+		// Simple brute force max search
+		for k in self.tiles.keys() {
+			if k.0 > x_max {x_max = k.0};
+			if k.1 > y_max {y_max = k.1};
+			if k.0 < x_min {x_min = k.0};
+			if k.1 < y_min {y_min = k.1};
+		}
+		(x_min, x_max, y_min, y_max)
+	}
 }
 
-// Define directions a bot might be facing, count in clockwise seuence to make turns easy
+impl fmt::Display for Ship {
+	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+		// Define our "character set"
+		let render = |x| match x {&Color::White=>"#", &Color::Black=>" "};
+		// Derive dimensions of traversed space
+		let (x_min, x_max, y_min, y_max) = self.dimensions();
+
+		// Print Rows from top to bottom, columns left to right
+		let mut i = y_max;
+		while i >= y_min {
+			for col in x_min..=x_max {
+				write!(f, "{}", match self.tiles.get(&(col, i)) {Some(c)=> render(c), None=>render(&self.def_color)})?;
+			}
+			write!(f, "\n")?;
+			i -= 1;
+		}
+
+		Ok(())
+    }
+}
+
+// Define directions a bot might be facing and enum for turn directions
+// Order here is important to map to IO from CPU 
 #[derive(Clone, Copy)]
 enum Direction {
-	North=0,
-	East=1,
-	South=2,
-	West=3,
+	North,
+	East,
+	South,
+	West,
 }
 
 enum Turn {
-	Left=0,
-	Right=1
+	Left,
+	Right
 }
 
 // Convert from i64 to a turn
@@ -79,7 +123,7 @@ impl From<i64> for Turn {
 	}
 }
 
-// Define moves based on Turn
+// Define move behavior based on Turn value
 impl Direction {
 	fn turn(self, dir: Turn) -> Self{
 		use Direction::*;
@@ -93,7 +137,8 @@ impl Direction {
 	}
 
 }
-// State of painting robot
+
+// Painter bot class
 struct Bot<'a> {
 	facing: Direction,
 	coord: (i32, i32),
@@ -140,9 +185,15 @@ impl Bot<'_> {
 			self.cpu.input(self.ship.get_color(&self.coord) as i64);
 		}
 		
-		// TODO: Copy code from above and maybe make that bit a method
+		// CPU will be one cycle behind, with one more output to pop. use it here
 		match self.cpu.output() {
-			Some(v) => self.ship.set_color(self.coord, Color::from(v)),
+			Some(v) => {
+				self.ship.set_color(self.coord, Color::from(v));
+				self.facing = self.facing.turn(Turn::from(self.cpu.output().unwrap()));
+
+				// Take one step forward 
+				self.step_forward();
+			},
 			None => ()
 		};
 	}
@@ -152,15 +203,26 @@ fn main() -> std::io::Result<()>{
 	let buf = &fs::read("./painter.txt")?;
 	// Convert to string, Trim whitespace, Split on commas, Parse as i64, Collect as vec
 	let prog: Vec<i64> = std::str::from_utf8(buf).unwrap().trim().split(",").map(|x| x.parse::<i64>().unwrap()).collect();
-
-	let mut s = Ship::new(Color::Black);
-	// Limit scope so that ships borrow is released and we can inspect it's state after the robot is done
 	{
-		let mut b = Bot::new(&mut s, &prog);
-		b.paint();
-	}
+		let mut s = Ship::new(Color::Black, None);
+		// Limit scope so that ships borrow is released and we can inspect it's state after the robot is done
+		{
+			let mut b = Bot::new(&mut s, &prog);
+			b.paint();
+		}
 
-	println!("{} tiles were painted", s.tiles_painted());
+		println!("Ship painted as follows({} tiles):\n{}", s.tiles_painted(), s);
+	}
+	{
+		let mut s = Ship::new(Color::Black, Some(Color::White));
+		// Limit scope so that ships borrow is released and we can inspect it's state after the robot is done
+		{
+			let mut b = Bot::new(&mut s, &prog);
+			b.paint();
+		}
+
+		println!("Ship painted as follows({} tiles):\n{}", s.tiles_painted(), s);
+	}
 
 	Ok(())
 }
