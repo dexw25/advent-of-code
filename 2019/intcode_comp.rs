@@ -177,6 +177,11 @@ impl IntcodeComp {
 		self.out_buf.pop_front()
 	}
 
+	// Return number of items in output queue
+	pub fn output_available(&self) -> usize {
+		self.out_buf.len()
+	}
+
 	// Convenience method to run until either a halt command or the core is starved of input
 	pub fn run_all(&mut self) {
 		// starvation must occur twice

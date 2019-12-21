@@ -173,7 +173,7 @@ impl Bot<'_> {
 	fn paint(&mut self) {
 		// Flow is always input first, then CPU outputs the color to paint the current tile and the direction to move
 		self.cpu.input(self.ship.get_color(&self.coord) as i64);
-		while self.cpu.eval_async() == true {
+		while self.cpu.eval_async() == true || self.cpu.output_available() > 0 {
 			// unwrap() here, if CPU pauses for input and does not provide 2 outputs this is a logic error
 			self.ship.set_color(self.coord, Color::from(self.cpu.output().unwrap()));
 			self.facing = self.facing.turn(Turn::from(self.cpu.output().unwrap()));
@@ -184,18 +184,6 @@ impl Bot<'_> {
 			// Read current tile
 			self.cpu.input(self.ship.get_color(&self.coord) as i64);
 		}
-		
-		// CPU will be one cycle behind, with one more output to pop. use it here
-		match self.cpu.output() {
-			Some(v) => {
-				self.ship.set_color(self.coord, Color::from(v));
-				self.facing = self.facing.turn(Turn::from(self.cpu.output().unwrap()));
-
-				// Take one step forward 
-				self.step_forward();
-			},
-			None => ()
-		};
 	}
 }
 
