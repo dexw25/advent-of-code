@@ -2,20 +2,20 @@ use std::fs;
 use std::fmt;
 
 
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
 struct Coord {
-	x: i32,
-	y: i32,
-	z: i32
+	x: i64,
+	y: i64,
+	z: i64
 }
 
 impl Coord {
-	fn sum(&self) -> i32 {
+	fn sum(&self) -> i64 {
 		self.x.abs() + self.y.abs() + self.z.abs()
 	}
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 struct Moon {
 	pos: Coord,
 	vel: Coord,
@@ -27,13 +27,6 @@ impl Moon {
 			pos,
 			vel: Coord {x:0, y:0, z:0}
 		}
-	}
-
-	// Apply velocity vector
-	pub fn apply_velocity(&mut self) {
-		self.pos.x += self.vel.x;
-		self.pos.y += self.vel.y;
-		self.pos.z += self.vel.z;
 	}
 }
 
@@ -54,55 +47,53 @@ impl Sim {
 
 	}
 
-	// Closure to extract field from moon, passed as reference because we use it more than once in here
-	fn g_update(&mut self, axis: Axes){
-		// Save a closure to get the relevant axis based on arg, to keep following code concise
-		let bodies = self.bodies.as_mut_slice();
-		let pos_fun = |m: &Moon| match axis {
-			Axes::X => m.pos.x,
-			Axes::Y => m.pos.y,
-			Axes::Z => m.pos.z,
-		};
+	// Update gravity
+	fn apply_gravity(&mut self){
+		for i in 0..self.bodies.len() {
+			// Copy out position coord for processing
+			let pos = self.bodies[i].pos;
 
-		for i in 0..bodies.len() {
 			// Still not great, but better than a sort. Search all moons and calculate modifier by comparison and addition
-			let coord = pos_fun(&bodies[i]);
-			let mut accel: i32 = 0;
-			for m in bodies.iter() {
+			let mut accel_x: i64 = 0;
+			let mut accel_y: i64 = 0;
+			let mut accel_z: i64 = 0;
+			for j in self.bodies.iter() {
 				// add one for every body above this one, sub for every body below, ignore bodies at equal position
-				accel += if pos_fun(m) > coord {1} else if pos_fun(m) < coord {-1} else {0};
+				accel_x += match pos.x - j.pos.x {
+					1..=std::i64::MAX => -1,
+					std::i64::MIN..=-1 => 1,
+					0 => 0
+				};
+				// add one for every body above this one, sub for every body below, ignore bodies at equal position
+				accel_y += match pos.y - j.pos.y {
+					1..=std::i64::MAX => -1,
+					std::i64::MIN..=-1 => 1,
+					0 => 0
+				};
+				// add one for every body above this one, sub for every body below, ignore bodies at equal position
+				accel_z += match pos.z - j.pos.z {
+					1..=std::i64::MAX => -1,
+					std::i64::MIN..=-1 => 1,
+					0 => 0
+				};
 			}
 
-			match axis {
-				Axes::Y => bodies[i].vel.y += accel,
-				Axes::X => bodies[i].vel.x += accel,
-				Axes::Z => bodies[i].vel.z += accel,
-			};
+			self.bodies[i].vel.x += accel_x;
+			self.bodies[i].vel.y += accel_y;
+			self.bodies[i].vel.z += accel_z;
 		}
-	}
-
-	// Apply gravity transformation to velocity (Sorts bodies 3 times, if bodies is long this will be a long op)
-	// Every moon on either side incurs a 1 unit change in velocity on the axis for which the position is different
-	// If the coordinate is the same then the moon has no effect
-	fn apply_gravity(&mut self) {		
-		// X axis
-		self.g_update(Axes::X);
-
-		// Y axis
-		self.g_update(Axes::Y);
-
-		// Z axis
-		self.g_update(Axes::Z);
 	}
 
 	fn apply_velocity(&mut self) {
 		for m in self.bodies.as_mut_slice() {
-			m.apply_velocity();
+			m.pos.x += m.vel.x;
+			m.pos.y += m.vel.y;
+			m.pos.z += m.vel.z;
 		}
 	}
 
 	// Step steps times
-	fn step(&mut self, steps: u32) {
+	fn step(&mut self, steps: usize) {
 		for _i in 0..steps {
 			// Apply gravity, mutate velocity based on position
 			self.apply_gravity();
@@ -113,9 +104,9 @@ impl Sim {
 	}
 
 	// Total energy of system
-	fn total_energy(&self) -> i32 {
+	fn total_energy(&self) -> i64 {
 		// Total energy is the sum of the absolute values of all components in the data format
-		let mut total:i32 = 0;
+		let mut total:i64 = 0;
 		self.bodies.iter().for_each(|x| total += x.pos.sum()*x.vel.sum());
 		total
 	}
@@ -130,9 +121,9 @@ impl From<&str> for Moon {
 		loop {
 			match s.next() {
 				Some(axis) => match axis.trim() {
-					"x" => ret.x = s.next().unwrap().parse::<i32>().unwrap(), 
-					"y" => ret.y = s.next().unwrap().parse::<i32>().unwrap(), 
-					"z" => ret.z = s.next().unwrap().parse::<i32>().unwrap(),
+					"x" => ret.x = s.next().unwrap().parse::<i64>().unwrap(), 
+					"y" => ret.y = s.next().unwrap().parse::<i64>().unwrap(), 
+					"z" => ret.z = s.next().unwrap().parse::<i64>().unwrap(),
 					&_ => panic!("Unexpected character {} found in initializer string", axis)
 				},
 				None => break
@@ -151,20 +142,17 @@ impl fmt::Display for Moon {
 fn main() -> std::io::Result<()> {
 	let buf = &fs::read("./initstate.txt")?;
 
-	// For each line create a new moon object and make a vector of them all
 	let moons: Vec<Moon> = std::str::from_utf8(buf).unwrap().trim().lines().map(|s| Moon::from(s)).collect();
 
-	// Initialize sim with state from file
-	let mut sim = Sim::new(moons);
+	// Initialize sim with state from file: For each line create a new moon object and make a vector of them all
+	let mut sim = Sim::new(std::str::from_utf8(buf).unwrap().trim().lines().map(|s| Moon::from(s)).collect());
 
-	//DEBUG
-	// sim.single_step();
-	// Perform 1000 steps
 	sim.step(1000);
 
-	//Print total energy in system
+	// //Print total energy in system
 	println!("Total energy after 1000 steps: {}", sim.total_energy());
-	// println!("Final state: {:#?}", sim.bodies);
+	// println!("{} steps until loop", sim.loop_len());
+
 
 	Ok(())
 }
