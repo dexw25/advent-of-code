@@ -110,6 +110,36 @@ impl Sim {
 		self.bodies.iter().for_each(|x| total += x.pos.sum()*x.vel.sum());
 		total
 	}
+
+	// Find steps until the system reaches it's first state, taking some assumptions
+	//  - Each axis is 100% independent of the other two
+	//  - Any loop point (that we care about) has zero velocity
+	//  - 
+	fn loop_len(&mut self) -> u64 {
+		// Compare total energy to begin, then check intensively to verify false positives
+		let mut total:u64 = 0;
+		let initial_state = self.bodies.clone();
+		let initial_energy =self.total_energy();
+		loop {
+			self.apply_gravity();
+			self.apply_velocity();
+			total += 1;
+
+			// Check if we looped by checksum (it's not a great checksum but it reduces the number of intensive checks)
+			let mut eq = true;
+			if initial_energy == self.total_energy() {
+				// Intensive check to eliminate false positives
+				// Vector is never reordered so compare element by element
+				for i in 0..self.bodies.len() {
+					if self.bodies[i] != initial_state[i] {eq = false;}
+				}
+				if eq {
+					break;
+				}
+			}
+		}
+		total
+	}
 }
 
 // init from initial state in this form: '<x=14, y=2, z=8>', wierd things will happen if any members are missing, whitespace is ignored
@@ -151,7 +181,12 @@ fn main() -> std::io::Result<()> {
 
 	// //Print total energy in system
 	println!("Total energy after 1000 steps: {}", sim.total_energy());
-	// println!("{} steps until loop", sim.loop_len());
+
+	// Reset sim
+	let mut sim = Sim::new(std::str::from_utf8(buf).unwrap().trim().lines().map(|s| Moon::from(s)).collect());
+	
+
+	println!("{} steps until loop", sim.loop_len());
 
 
 	Ok(())
