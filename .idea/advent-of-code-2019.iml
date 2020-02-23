@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module type="CPP_MODULE" version="4">
+  <component name="NewModuleRootManager">
+    <content url="file://$MODULE_DIR$">
+      <sourceFolder url="file://$MODULE_DIR$/2019/day_01/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/2019/day_01/examples" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/2019/day_01/tests" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/2019/day_01/benches" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/2019/day_02/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/2019/day_02/examples" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/2019/day_02/tests" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/2019/day_02/benches" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/2019/day_03/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/2019/day_03/examples" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/2019/day_03/tests" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/2019/day_03/benches" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/2019/day_04/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/2019/day_04/examples" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/2019/day_04/tests" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/2019/day_04/benches" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/2019/day_05/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/2019/day_05/examples" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/2019/day_05/tests" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/2019/day_05/benches" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/2019/day_06/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/2019/day_06/examples" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/2019/day_06/tests" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/2019/day_06/benches" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/2019/day_07/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/2019/day_07/examples" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/2019/day_07/tests" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/2019/day_07/benches" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/2019/day_08/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/2019/day_08/examples" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/2019/day_08/tests" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/2019/day_08/benches" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/2019/day_09/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/2019/day_09/examples" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/2019/day_09/tests" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/2019/day_09/benches" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/2019/day_10/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/2019/day_10/examples" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/2019/day_10/tests" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/2019/day_10/benches" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/2019/day_11/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/2019/day_11/examples" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/2019/day_11/tests" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/2019/day_11/benches" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/2019/day_12/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/2019/day_12/examples" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/2019/day_12/tests" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/2019/day_12/benches" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/2019/intcode/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/2019/intcode/examples" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/2019/intcode/tests" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/2019/intcode/benches" isTestSource="true" />
+      <excludeFolder url="file://$MODULE_DIR$/2019/day_01/target" />
+      <excludeFolder url="file://$MODULE_DIR$/2019/day_02/target" />
+      <excludeFolder url="file://$MODULE_DIR$/2019/day_03/target" />
+      <excludeFolder url="file://$MODULE_DIR$/2019/day_04/target" />
+      <excludeFolder url="file://$MODULE_DIR$/2019/day_05/target" />
+      <excludeFolder url="file://$MODULE_DIR$/2019/day_06/target" />
+      <excludeFolder url="file://$MODULE_DIR$/2019/day_07/target" />
+      <excludeFolder url="file://$MODULE_DIR$/2019/day_08/target" />
+      <excludeFolder url="file://$MODULE_DIR$/2019/day_09/target" />
+      <excludeFolder url="file://$MODULE_DIR$/2019/day_10/target" />
+      <excludeFolder url="file://$MODULE_DIR$/2019/day_11/target" />
+      <excludeFolder url="file://$MODULE_DIR$/2019/day_12/target" />
+      <excludeFolder url="file://$MODULE_DIR$/2019/intcode/target" />
+    </content>
+    <orderEntry type="inheritedJdk" />
+    <orderEntry type="sourceFolder" forTests="false" />
+  </component>
+</module>
