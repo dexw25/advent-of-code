@@ -2,8 +2,7 @@
 
 use std::fs::File;
 use std::io::Read;
-mod intcode_comp;
-use intcode_comp::IntcodeComp;
+use intcode::IntcodeComp;
 
 fn main() -> std::io::Result<()> {
 	// Open file

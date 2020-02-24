@@ -1,5 +1,4 @@
-mod intcode_comp;
-use intcode_comp::IntcodeComp;
+use intcode::IntcodeComp;
 use std::fs;
 use std::collections::HashMap;
 use std::fmt;

@@ -5,8 +5,7 @@
 use std::fs::File;
 use std::io::Read;
 use std::convert::TryInto;
-mod intcode_comp;
-use intcode_comp::IntcodeComp;
+use intcode::IntcodeComp;
 
 fn main() -> std::io::Result<()> {
 	// Open file
@@ -61,28 +60,3 @@ fn computer_result(program: &Vec<i64>, noun: i64, verb: i64) -> i64 {
 	comp._int_mem()[0]
 }
 
-/* Keeping this aroud for posterity
-// Implementation of the computer generalized, mem_space is borrowed mutably
-fn rocket_computer(mem_space: &mut Vec<u32>){
-	let mut program_counter = 0;
-	loop {
-		let opcode = mem_space[program_counter];
-		match opcode {
-			1 => {
-				let l = mem_space[program_counter+1] as usize;
-				let r = mem_space[program_counter+2] as usize;
-				let writeback = mem_space[program_counter+3] as usize;
-				mem_space[writeback] = mem_space[l] + mem_space[r];
-			},
-			2 => {
-				let l = mem_space[program_counter+1] as usize;
-				let r = mem_space[program_counter+2] as usize;
-				let writeback = mem_space[program_counter+3] as usize;
-				mem_space[writeback] = mem_space[l] * mem_space[r];
-			},
-			99 => break,
-			_ => println!("ERROR"),
-		}
-		program_counter += 4;
-	}
-}*/
