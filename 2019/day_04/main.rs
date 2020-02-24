@@ -48,14 +48,24 @@ fn has_pair(seq: &Vec<usize>) -> bool {
 	false
 }
 
-fn main() -> std::io::Result<()> {
-
-	// Some test cases
+#[test]
+fn test_repeats() {
 	assert_eq!(has_repeats(&vec![1, 1, 1, 1, 1, 1]), true);
+}
+#[test]
+fn test_pairs() {
 	assert_eq!(has_pair(&vec![1, 1, 1, 1, 1, 1]), false);
+}
+#[test]
+fn test_pairs_2() {
 	assert_eq!(has_pair(&vec![1, 1, 2, 2, 3, 3]), true);
+}
+#[test]
+fn test_pairs_3() {
 	assert_eq!(has_pair(&vec![1, 1, 1, 2, 3, 3]), true);
+}
 
+fn main() -> std::io::Result<()> {
 	let mut total:u32 = 0;
 	let mut total_2:u32 = 0;
 	let val_min = 367479;

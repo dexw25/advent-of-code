@@ -80,14 +80,16 @@ fn min_path(a_node: &str, b_node: &str, tree: &HashMap<String, String>) -> usize
 	nodes_in_path.len() // all nodes in this set constitute the path, counting them provides the number of branches to traverse
 }
 
-fn main() -> std::io::Result<()> {
-	
-	// test cases
-	{
-		assert_eq!(count_links(&init_tree("./test0.txt")), 42);
+#[test]
+fn links_count() {
+	assert_eq!(count_links(&init_tree("./test0.txt")), 42);
+}
+#[test]
+fn sample_path() {
+	assert_eq!(min_path("YOU", "SAN", &init_tree("./test1.txt")), 4);
+}
 
-		assert_eq!(min_path("YOU", "SAN", &init_tree("./test1.txt")), 4);
-	}
+fn main() -> std::io::Result<()> {
 	// Do the work
 	let map = init_tree("./input.txt");
 	println!("Part 1 answer: {}", count_links(&map));

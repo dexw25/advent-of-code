@@ -168,52 +168,6 @@ impl Wire {
 		}
 		total_steps
 	}
-
-/* The following dead code existed to eliminate loops in the path because I misread the problem statement. Keeping it around because I worked hard on it and don't want to delete
- It depends on a method existing to get the full list of points which could be implemented simply enough
-	// Calculate path distance to a point, discount loops and do not include that point
-	fn path_to(&self, target: &Point) -> u32 {
-		let mut pt_idx = 0;
-
-		let mut points = self.as_points();
-
-		// Search for input point
-		for (i, pt) in points.iter().enumerate() {
-			if pt == target {
-				break;
-			}
-		}
-
-		// If this is true then the point passed was not in the path of this wire
-		assert_ne!(pt_idx+1, points.len());
-
-		// Convert the path as we have see it to a hash set to optimize lookups, since we do one per point of naive path and a linear search for that would suck
-		let mut pts_hash = HashSet::new();
-		points.resize(pt_idx+1, *target); // Truncate all points after the target
-		let mut i:usize = 0;
-
-		while i < pt_idx {
-			// insert() returns false if the value was already present
-			if !pts_hash.insert(points[i]) {
-				let cross_idx = i;
-				let cross_pt = points.remove(i); // Save cross and remove
-				i -= 1;
-				while points[i] != cross_pt {
-					pts_hash.remove(&points[i]);
-					// points.remove(i); // use drain below, more optimal for removing a whole range at once
-					i -= 1;
-				}
-				// i now points to the first crossing of the intersect above
-				points.drain(i+1..cross_idx); // cross was removed above so use exclusive range here
-				pt_idx -= cross_idx - i; // we removed this many from the set
-				i += 1;
-			}
-			i += 1;
-		}
-
-		points.len() as u32
-		
-	}*/
 }
 
 // Feed input text files into the classes above and rank the output
@@ -244,15 +198,20 @@ fn find_crossings(path: &str) -> (u32, u32) {
 	(shortest_distance, shortest_path)
 }
 
-fn main() -> std::io::Result<()> {
-
-	// Cribbed from example inputs and results
+#[test]
+fn test1() {
 	assert_eq!(find_crossings("./test0.txt"), (6, 30));
+}
+#[test]
+fn test2() {
 	assert_eq!(find_crossings("./test1.txt"), (159, 610));
+}
+#[test]
+fn test3() {
 	assert_eq!(find_crossings("./test2.txt"), (135, 410));
+}
 
-	println!("Tests Passed!!");
-
+fn main() -> std::io::Result<()> {
 	let distances = find_crossings("./input.txt");
 
 	println!("Part 1 solution: Manhattan Distance = {}", distances.0);

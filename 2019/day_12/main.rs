@@ -2,7 +2,6 @@ use std::fs;
 use std::fmt;
 use std::collections::HashSet;
 
-
 #[derive(Copy, Clone, PartialEq, Eq)]
 struct Coord {
 	x: i64,

@@ -3,7 +3,6 @@ use std::io::Read;
 use std::collections::HashSet;
 use std::fmt;
 use std::convert::TryInto;
-// use std::iter::FromIterator;
 
 // Helper function to break down slope to minimal factors for tracing rays on a grid
 fn minimize_slope (x_slope: i32, y_slope: i32) -> (i32, i32) {
@@ -227,9 +226,7 @@ fn main() -> std::io::Result<()> {
 		file.read_to_string(&mut buf)?;
 		
 		f = Field::new(&buf);
-	}	
-
-	// println!("Input map: \n{}", f);
+	}
 
 	// Find the point with the most points visible from it
 	let mut best_rock: (i32, i32) = (0,0);
