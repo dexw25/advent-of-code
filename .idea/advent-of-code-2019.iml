@@ -54,6 +54,10 @@
       <sourceFolder url="file://$MODULE_DIR$/2019/intcode/examples" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/2019/intcode/tests" isTestSource="true" />
       <sourceFolder url="file://$MODULE_DIR$/2019/intcode/benches" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/2019/day_13/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/2019/day_13/examples" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/2019/day_13/tests" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/2019/day_13/benches" isTestSource="true" />
       <excludeFolder url="file://$MODULE_DIR$/2019/day_01/target" />
       <excludeFolder url="file://$MODULE_DIR$/2019/day_02/target" />
       <excludeFolder url="file://$MODULE_DIR$/2019/day_03/target" />
@@ -66,6 +70,7 @@
       <excludeFolder url="file://$MODULE_DIR$/2019/day_10/target" />
       <excludeFolder url="file://$MODULE_DIR$/2019/day_11/target" />
       <excludeFolder url="file://$MODULE_DIR$/2019/day_12/target" />
+      <excludeFolder url="file://$MODULE_DIR$/2019/day_13/target" />
       <excludeFolder url="file://$MODULE_DIR$/2019/intcode/target" />
     </content>
     <orderEntry type="inheritedJdk" />

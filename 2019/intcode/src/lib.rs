@@ -8,6 +8,7 @@ mod tests {
 }
 use std::convert::TryInto;
 use std::collections::VecDeque;
+use std::fs;
 
 pub struct IntcodeComp {
     mem_space: Vec<i64>,
@@ -335,4 +336,9 @@ impl IntcodeComp {
         }
         false
     }
+}
+
+pub fn prog_from_file(path: &str) -> Vec<i64> {
+    let buf = &fs::read(path).unwrap();
+    std::str::from_utf8(buf).unwrap().trim().split(",").map(|x| x.parse::<i64>().unwrap()).collect()
 }
