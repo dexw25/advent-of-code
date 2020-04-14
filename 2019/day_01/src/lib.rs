@@ -15,29 +15,32 @@ mod tests {
 // Use map() to efficiently collapse input to output
 // Calculate fuel for parts not counting fuel mass
 pub fn part_one(parts: &Vec<u32>) -> u32 {
-    parts.iter().map(|&i| {
-        if i > 6 {i / 3 - 2}
-        else {0}
-    }).sum()
+    parts
+        .iter()
+        .map(|&i| if i > 6 { i / 3 - 2 } else { 0 })
+        .sum()
 }
 
 // Include fuel mass as part of requirement
 pub fn part_two(parts: &Vec<u32>) -> u32 {
-    parts.iter().map(|&i| {
-        if i < 9 {
-            0
-        } else {
-            let fuel =  i / 3 - 2;
-            fuel + fuel_for_mass(fuel)
-        }
-    }).sum()
+    parts
+        .iter()
+        .map(|&i| {
+            if i < 9 {
+                0
+            } else {
+                let fuel = i / 3 - 2;
+                fuel + fuel_for_mass(fuel)
+            }
+        })
+        .sum()
 }
 
 fn fuel_for_mass(mass: u32) -> u32 {
     if mass < 9 {
         0
     } else {
-        let fuel =  mass / 3 - 2;
+        let fuel = mass / 3 - 2;
         fuel + fuel_for_mass(fuel)
     }
 }

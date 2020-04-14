@@ -1,5 +1,5 @@
-use std::fs;
 use day_01::{part_one, part_two};
+use std::fs;
 
 fn main() -> std::io::Result<()> {
     let buf = &fs::read("./input.txt")?;
