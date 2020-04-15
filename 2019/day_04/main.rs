@@ -9,7 +9,7 @@
 */
 //
 
-fn increasing(seq: &Vec<usize>) -> bool {
+fn increasing(seq: &[usize]) -> bool {
     let mut last: usize = 0;
     for i in seq.iter() {
         if last > *i {
@@ -20,7 +20,7 @@ fn increasing(seq: &Vec<usize>) -> bool {
     true
 }
 
-fn has_repeats(seq: &Vec<usize>) -> bool {
+fn has_repeats(seq: &[usize]) -> bool {
     let mut last: usize = 10; // No digit in the input will be 10 or more
     for i in seq.iter() {
         if last == *i {
@@ -32,7 +32,7 @@ fn has_repeats(seq: &Vec<usize>) -> bool {
 }
 
 // Part 2 constriction, return false if any sequence has more than 2 in a row
-fn has_pair(seq: &Vec<usize>) -> bool {
+fn has_pair(seq: &[usize]) -> bool {
     let mut last: usize = 10;
     let mut i = 0;
     while i < seq.len() {
@@ -76,9 +76,9 @@ fn test_pairs_3() {
 fn main() -> std::io::Result<()> {
     let mut total: u32 = 0;
     let mut total_2: u32 = 0;
-    let val_min = 367479;
-    let val_max = 893698; // this is the puzzle input
-                          // 6 digit number enforced by loops
+    let val_min = 367_479;
+    let val_max = 893_698; // this is the puzzle input
+                           // 6 digit number enforced by loops
     for a in 0..10 {
         for b in 0..10 {
             for c in 0..10 {
@@ -88,7 +88,7 @@ fn main() -> std::io::Result<()> {
                             // Needs to be checked both as a sequence and as an integer value so derive both
                             let password = vec![a, b, c, d, e, f];
                             let password_val =
-                                a * 100000 + b * 10000 + c * 1000 + d * 100 + e * 10 + f;
+                                a * 100_000 + b * 10_000 + c * 1_000 + d * 100 + e * 10 + f;
                             // If the number isnt in the given range then do not do any further checks
                             if password_val > val_min && password_val < val_max {
                                 if increasing(&password) && has_repeats(&password) {

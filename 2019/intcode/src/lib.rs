@@ -59,8 +59,8 @@ impl Opcodes {
 
 // Closures etc could make this much much cleaner I might come back and clean it up later
 impl IntcodeComp {
-    pub fn new(prog: &Vec<i64>) -> IntcodeComp {
-        let mem = prog.clone(); // Make a mutable clone of the program to work on in local memory
+    pub fn new(prog: &[i64]) -> IntcodeComp {
+        let mem = prog.to_vec(); // Make a mutable clone of the program to work on in local memory
         let pc = 0;
         let i = VecDeque::new();
         let o = VecDeque::new();
@@ -96,20 +96,17 @@ impl IntcodeComp {
         // starvation must occur twice
         let mut starved = false;
         loop {
-            match self.eval_async() {
-                true => {
-                    if self.in_buf.len() == 0 {
-                        if starved {
-                            println!("intcode CPU input starved in run_all, this is probably not what you want");
-                            break;
-                        } else {
-                            starved = true;
-                        }
-                    } // else continue
-                }
-                false => {
-                    break; // Completed execution
-                }
+            if self.eval_async() {
+                if self.in_buf.is_empty() {
+                    if starved {
+                        println!("intcode CPU input starved in run_all, this is probably not what you want");
+                        break;
+                    } else {
+                        starved = true;
+                    }
+                } // else continue
+            } else {
+                break; // Completed execution
             }
         }
     }
@@ -184,17 +181,17 @@ impl IntcodeComp {
     // Implementation of the computer generalized, call to evaluate until output, return is true if continued execution is a thing, or false if the program has halted
     pub fn eval_async(&mut self) -> bool {
         // Push least significant digit first, then rest into array of digits for decoding
-        fn decompose(n: &i64, digits: &mut Vec<u8>) {
+        fn decompose(n: i64, digits: &mut Vec<u8>) {
             digits.push((n % 10) as u8);
-            if *n >= 10 {
-                decompose(&(n / 10), digits)
+            if n >= 10 {
+                decompose(n / 10, digits)
             }
         }
 
         loop {
             // Break opcode into vec of digits for decoding of modes
             let mut digits: Vec<u8> = Vec::with_capacity(5); // 2 for opcode, 3 for mode bits
-            decompose(&self.mem_space[self.program_counter], &mut digits);
+            decompose(self.mem_space[self.program_counter], &mut digits);
 
             // use iterator to pop without having to reverse
             let mut it = digits.iter();
@@ -309,10 +306,7 @@ impl IntcodeComp {
                     let r = self.op_fetch(r_imm, 2);
 
                     // Operate on local "registers"
-                    let result: i64 = match l < r {
-                        true => 1,
-                        false => 0,
-                    };
+                    let result: i64 = if l < r { 1 } else { 0 };
 
                     // Writeback
                     self.write_back(dst_imm, 3, result);
@@ -328,10 +322,7 @@ impl IntcodeComp {
                     let r = self.op_fetch(r_imm, 2);
 
                     // Operate on local "registers"
-                    let result: i64 = match l == r {
-                        true => 1,
-                        false => 0,
-                    };
+                    let result: i64 = if l == r { 1 } else { 0 };
 
                     // Writeback
                     self.write_back(dst_imm, 3, result);
@@ -356,7 +347,7 @@ pub fn prog_from_file(path: &str) -> Vec<i64> {
     std::str::from_utf8(buf)
         .unwrap()
         .trim()
-        .split(",")
+        .split(',')
         .map(|x| x.parse::<i64>().unwrap())
         .collect()
 }

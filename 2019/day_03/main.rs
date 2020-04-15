@@ -27,7 +27,7 @@ struct Line {
 
 impl Point {
     // Distance to a specific point
-    fn manhattan_dist(&self, other: &Point) -> u32 {
+    fn manhattan_dist(self, other: Point) -> u32 {
         ((self.x - other.x).abs() + (self.y - other.y).abs()) as u32
     }
 }
@@ -45,7 +45,7 @@ struct Wire {
 
 impl Wire {
     fn new(path: &str) -> Wire {
-        let steps = path.split(",");
+        let steps = path.split(',');
         let mut list = Vec::new(); // could replace with with_capacity for runtime optimization but getting the length of the wire also has a cost at this point
         for step in steps {
             let mut buf = step.chars();
@@ -169,7 +169,7 @@ impl Wire {
     }
 
     // Calculate the length to the given point along the path of the wire, should probably check here if the point is on the wire
-    fn path_to(&self, target: &Point) -> u32 {
+    fn path_to(&self, target: Point) -> u32 {
         use crate::Vertical::{X, Y};
         let mut current_point = Point {
             x: self.start.x,
@@ -189,7 +189,7 @@ impl Wire {
                             x_left += 1;
                         }
                         total_steps += 1;
-                        if current_point == *target {
+                        if current_point == target {
                             return total_steps;
                         }
                     }
@@ -205,7 +205,7 @@ impl Wire {
                             y_left += 1;
                         }
                         total_steps += 1;
-                        if current_point == *target {
+                        if current_point == target {
                             return total_steps;
                         }
                     }
@@ -234,8 +234,8 @@ fn find_crossings(path: &str) -> (u32, u32) {
     let mut shortest_distance = std::u32::MAX;
     let mut shortest_path = std::u32::MAX;
     for intersect in wire1.intersects(&wire2) {
-        let dist_manhattan = intersect.manhattan_dist(&wire1.start);
-        let dist_path = wire1.path_to(&intersect) + wire2.path_to(&intersect); // path calculation from both not including the intersection itself, hence +1
+        let dist_manhattan = intersect.manhattan_dist(wire1.start);
+        let dist_path = wire1.path_to(intersect) + wire2.path_to(intersect); // path calculation from both not including the intersection itself, hence +1
 
         if dist_manhattan < shortest_distance {
             shortest_distance = dist_manhattan

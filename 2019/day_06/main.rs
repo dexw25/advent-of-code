@@ -18,7 +18,7 @@ fn init_tree(path: &str) -> HashMap<String, String> {
 
     // key is child, value is key of parent
     for l in lines {
-        let mut rel = l.split(")");
+        let mut rel = l.split(')');
         let parent = rel.next().unwrap();
         let child = rel.next().unwrap();
         rels.insert(child.to_string(), parent.to_string());

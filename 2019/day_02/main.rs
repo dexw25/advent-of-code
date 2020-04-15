@@ -13,7 +13,7 @@ fn main() -> std::io::Result<()> {
     let mut buf = String::new();
     file.read_to_string(&mut buf)?;
 
-    let ops = buf.split(",");
+    let ops = buf.split(',');
 
     let mut mem_space = Vec::new(); // Could use with_capacity here for a speed optimization
     for i in ops {
@@ -41,7 +41,7 @@ fn main() -> std::io::Result<()> {
                 &mem_space,
                 noun.try_into().unwrap(),
                 verb.try_into().unwrap(),
-            ) == 19690720
+            ) == 19_690_720
             {
                 println!("Solved! noun={}, verb={}, {} tries", noun, verb, tries);
                 return Ok(());
@@ -53,7 +53,7 @@ fn main() -> std::io::Result<()> {
 }
 
 // Add in program/verb: noun abstraction and wrap the core below
-fn computer_result(program: &Vec<i64>, noun: i64, verb: i64) -> i64 {
+fn computer_result(program: &[i64], noun: i64, verb: i64) -> i64 {
     let mut mem_space = program.to_vec(); // Make a mutable copy of the program to work in
     mem_space[1] = noun;
     mem_space[2] = verb;

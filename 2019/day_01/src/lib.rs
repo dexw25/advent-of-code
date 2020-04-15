@@ -14,7 +14,7 @@ mod tests {
 //  "to find the fuel required for a module, take its mass, divide by three, round down, and subtract 2"
 // Use map() to efficiently collapse input to output
 // Calculate fuel for parts not counting fuel mass
-pub fn part_one(parts: &Vec<u32>) -> u32 {
+pub fn part_one(parts: &[u32]) -> u32 {
     parts
         .iter()
         .map(|&i| if i > 6 { i / 3 - 2 } else { 0 })
@@ -22,7 +22,7 @@ pub fn part_one(parts: &Vec<u32>) -> u32 {
 }
 
 // Include fuel mass as part of requirement
-pub fn part_two(parts: &Vec<u32>) -> u32 {
+pub fn part_two(parts: &[u32]) -> u32 {
     parts
         .iter()
         .map(|&i| {

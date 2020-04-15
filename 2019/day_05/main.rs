@@ -10,7 +10,7 @@ fn main() -> std::io::Result<()> {
     let mut buf = String::new();
     file.read_to_string(&mut buf)?;
 
-    let ops = buf.split(","); // split on comma
+    let ops = buf.split(','); // split on comma
 
     let mut mem_space: Vec<i64> = Vec::new(); // Could use with_capacity here for a speed optimization
     for i in ops {
@@ -26,11 +26,8 @@ fn main() -> std::io::Result<()> {
     comp.input(1);
     comp.run_all();
     let mut o: Vec<i64> = Vec::new();
-    loop {
-        match comp.output() {
-            Some(val) => o.push(val),
-            None => break,
-        };
+    while let Some(val) = comp.output() {
+        o.push(val);
     }
     println!("Diagnostic Output, input 1: {:?}", o);
 
@@ -39,11 +36,8 @@ fn main() -> std::io::Result<()> {
     comp.input(5);
     comp.run_all();
     o.clear();
-    loop {
-        match comp.output() {
-            Some(val) => o.push(val),
-            None => break,
-        };
+    while let Some(val) = comp.output() {
+        o.push(val);
     }
     println!("Diagnostic Output, input 5: {:?}", o);
 
