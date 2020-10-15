@@ -46,8 +46,8 @@ impl Ship {
     }
 
     // get color of a tile, return painted value if it exists else default
-    fn get_color(&self, coord: &(i32, i32)) -> Color {
-        match self.tiles.get(coord) {
+    fn get_color(&self, coord: (i32, i32)) -> Color {
+        match self.tiles.get(&coord) {
             Some(c) => *c,
             None => self.def_color,
         }
@@ -86,9 +86,9 @@ impl Ship {
 impl fmt::Display for Ship {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         // Define our "character set"
-        let render = |x| match x {
-            &Color::White => "#",
-            &Color::Black => " ",
+        let render = |x: Color| match x {
+            Color::White => '#',
+            Color::Black => ' ',
         };
         // Derive dimensions of traversed space
         let (x_min, x_max, y_min, y_max) = self.dimensions();
@@ -101,12 +101,12 @@ impl fmt::Display for Ship {
                     f,
                     "{}",
                     match self.tiles.get(&(col, i)) {
-                        Some(c) => render(c),
-                        None => render(&self.def_color),
+                        Some(&c) => render(c),
+                        None => render(self.def_color),
                     }
                 )?;
             }
-            write!(f, "\n")?;
+            writeln!(f)?;
             i -= 1;
         }
 
@@ -176,7 +176,7 @@ struct Bot<'a> {
 
 impl Bot<'_> {
     // Initial state of bot, Ship has same lifetime as returned object
-    fn new<'a>(s: &'a mut Ship, prog: &Vec<i64>) -> Bot<'a> {
+    fn new<'a>(s: &'a mut Ship, prog: &[i64]) -> Bot<'a> {
         Bot {
             coord: (0, 0),
             cpu: IntcodeComp::new(prog),
@@ -200,8 +200,8 @@ impl Bot<'_> {
     // Paint until robot halts, no return, just mutate state of ship
     fn paint(&mut self) {
         // Flow is always input first, then CPU outputs the color to paint the current tile and the direction to move
-        self.cpu.input(self.ship.get_color(&self.coord) as i64);
-        while self.cpu.eval_async() == true || self.cpu.output_available() > 0 {
+        self.cpu.input(self.ship.get_color(self.coord) as i64);
+        while self.cpu.eval_async() || self.cpu.output_available() > 0 {
             // unwrap() here, if CPU pauses for input and does not provide 2 outputs this is a logic error
             self.ship
                 .set_color(self.coord, Color::from(self.cpu.output().unwrap()));
@@ -211,7 +211,7 @@ impl Bot<'_> {
             self.step_forward();
 
             // Read current tile
-            self.cpu.input(self.ship.get_color(&self.coord) as i64);
+            self.cpu.input(self.ship.get_color(self.coord) as i64);
         }
     }
 }
@@ -222,7 +222,7 @@ fn main() -> std::io::Result<()> {
     let prog: Vec<i64> = std::str::from_utf8(buf)
         .unwrap()
         .trim()
-        .split(",")
+        .split(',')
         .map(|x| x.parse::<i64>().unwrap())
         .collect();
     {

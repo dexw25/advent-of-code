@@ -137,25 +137,28 @@ impl Sim {
 
             loop {
                 // Apply gravity
-                for i in 0..state.len() {
+                let state_ro = state.clone(); // immutable/read only clone so that original may be modified
+
+                for (i, outer_s) in state.iter_mut().enumerate() {
                     let mut accel = 0;
-                    let pos = state[i].0; // 0 is position, 1 is vel
-                    for j in 0..state.len() {
+                    let pos = outer_s.0; // 0 is position, 1 is vel
+                    for (j, &s) in state_ro.iter().enumerate() {
                         if j != i {
                             // add one for every body above this one, sub for every body below, ignore bodies at equal position
-                            accel += match pos - state[j].0 {
-                                1..=std::i64::MAX => -1,
-                                std::i64::MIN..=-1 => 1,
-                                0 => 0,
+                            use std::cmp::Ordering;
+                            accel += match pos.cmp(&s.0) {
+                                Ordering::Greater => -1,
+                                Ordering::Less => 1,
+                                Ordering::Equal => 0,
                             };
                         }
                     }
-                    state[i].1 += accel; // Update V
+                    outer_s.1 += accel; // Update V
                 }
 
                 // Apply velocity
-                for i in 0..state.len() {
-                    state[i].0 += state[i].1;
+                for i in state.iter_mut() {
+                    i.0 += i.1;
                 }
 
                 steps += 1;
@@ -163,10 +166,7 @@ impl Sim {
                 // Check if cycle got found
                 let mut cycle = true;
                 for i in 0..state.len() {
-                    if state[i].1 != 0 {
-                        cycle = false;
-                        break;
-                    } else if state[i].0 != initstate[i].0 {
+                    if state[i].1 != 0 || state[i].0 != initstate[i].0 {
                         cycle = false;
                         break;
                     }
@@ -221,15 +221,13 @@ impl From<&str> for Moon {
             .trim_matches(|c| c == '<' || c == '>')
             .split_terminator(|c| c == ',' || c == '=');
         let mut ret = Coord { x: 0, y: 0, z: 0 };
-        loop {
-            match s.next() {
-                Some(axis) => match axis.trim() {
-                    "x" => ret.x = s.next().unwrap().parse::<i64>().unwrap(),
-                    "y" => ret.y = s.next().unwrap().parse::<i64>().unwrap(),
-                    "z" => ret.z = s.next().unwrap().parse::<i64>().unwrap(),
-                    &_ => panic!("Unexpected character {} found in initializer string", axis),
-                },
-                None => break,
+        // Consume all tokens from parsed string
+        while let Some(axis) = s.next() {
+            match axis.trim() {
+                "x" => ret.x = s.next().unwrap().parse::<i64>().unwrap(),
+                "y" => ret.y = s.next().unwrap().parse::<i64>().unwrap(),
+                "z" => ret.z = s.next().unwrap().parse::<i64>().unwrap(),
+                &_ => panic!("Unexpected character {} found in initializer string", axis),
             }
         }
         Moon::new(ret)
@@ -254,9 +252,8 @@ fn primes(top: u64) -> Vec<u64> {
         // Make sure i is not a multiple of a prime we've seen already
         if multiples.contains(&i) {
             continue;
-        }
-        // else i is a new prime
-        else {
+        } else {
+            // else i is a new prime
             ret.push(i);
             let mut acc = i;
             // Cache all multiples of i in hash set
@@ -273,7 +270,7 @@ fn primes(top: u64) -> Vec<u64> {
 }
 
 // Decompose n to prime factors
-fn decompose(mut n: u64, primes: &Vec<u64>) -> Vec<u32> {
+fn decompose(mut n: u64, primes: &[u64]) -> Vec<u32> {
     let mut ret: Vec<u32> = Vec::with_capacity(primes.len());
     for _i in 0..primes.len() {
         ret.push(0);
@@ -302,7 +299,7 @@ fn main() -> std::io::Result<()> {
             .unwrap()
             .trim()
             .lines()
-            .map(|s| Moon::from(s))
+            .map(Moon::from)
             .collect(),
     );
 
@@ -317,7 +314,7 @@ fn main() -> std::io::Result<()> {
             .unwrap()
             .trim()
             .lines()
-            .map(|s| Moon::from(s))
+            .map(Moon::from)
             .collect(),
     );
 

@@ -64,7 +64,7 @@ fn main() -> std::io::Result<()> {
         for col in row {
             print!("{}", if *col == 1 { "." } else { " " });
         }
-        println!("");
+        println!();
     }
 
     Ok(())

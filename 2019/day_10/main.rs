@@ -44,7 +44,7 @@ struct Rock {
 
 impl Rock {
     // Calculate angle and occlusions from origin and field
-    fn new(origin: &(i32, i32), field: &Field, coord: &(i32, i32)) -> Rock {
+    fn new(origin: (i32, i32), field: &Field, coord: (i32, i32)) -> Rock {
         // Vector to coord from origin for the purposes of calculating angles
         let x: f32 = (coord.0 - origin.0) as f32; //
         let y: f32 = (coord.1 - origin.1) as f32;
@@ -68,9 +68,9 @@ impl Rock {
         let count = diff.len();
 
         Rock {
-            angle: angle,
+            angle,
             occlusions: count as u32,
-            coord: *coord,
+            coord,
         }
     }
 }
@@ -83,7 +83,7 @@ struct Field {
 }
 
 impl Field {
-    fn new(input: &String) -> Field {
+    fn new(input: &str) -> Field {
         let mut x = 0;
         let mut y = 0;
         let mut map: HashSet<(i32, i32)> = HashSet::new();
@@ -111,7 +111,7 @@ impl Field {
         }
     }
 
-    fn count_visible(&self, point: &(i32, i32)) -> usize {
+    fn count_visible(&self, point: (i32, i32)) -> usize {
         // Make sure the set contains the passed point
         assert_eq!(self.rocks.contains(&point), true);
 
@@ -119,11 +119,11 @@ impl Field {
         // Count the number of asteroids that are occluded using 'point' as the origin
         // the difference is the number visible
         let mut occluded_set: HashSet<(i32, i32)> = HashSet::new();
-        occluded_set.insert(*point); // Do not count the point we care about
+        occluded_set.insert(point); // Do not count the point we care about
 
-        for a in self.rocks.iter() {
+        for &a in self.rocks.iter() {
             if a != point {
-                self.occluded_by(&point, a, &mut occluded_set)
+                self.occluded_by(point, a, &mut occluded_set)
             }
         }
 
@@ -134,12 +134,7 @@ impl Field {
     }
 
     // add to a set of points occluded by 'point' when looking from 'origin' (set is &mut to optimize calling function slightly since this is called a lot)
-    fn occluded_by(
-        &self,
-        origin: &(i32, i32),
-        point: &(i32, i32),
-        o_set: &mut HashSet<(i32, i32)>,
-    ) {
+    fn occluded_by(&self, origin: (i32, i32), point: (i32, i32), o_set: &mut HashSet<(i32, i32)>) {
         let (x_slope, y_slope) = minimize_slope(point.0 - origin.0, point.1 - origin.1);
 
         // Initial condition, walk out from point
@@ -158,7 +153,7 @@ impl Field {
     }
 
     // Return a set of points that may occlude the point
-    fn may_occlude(&self, origin: &(i32, i32), point: &(i32, i32)) -> HashSet<(i32, i32)> {
+    fn may_occlude(&self, origin: (i32, i32), point: (i32, i32)) -> HashSet<(i32, i32)> {
         let mut ret: HashSet<(i32, i32)> = HashSet::new();
         // Like above, except we reverse the order since we want to trace the ray back to the origin
         let (x_slope, y_slope) = minimize_slope(origin.0 - point.0, origin.1 - point.1);
@@ -180,16 +175,16 @@ impl Field {
     }
 
     // Return a list of the order of rocks that will be lasered
-    fn laser_order(&self, origin: &(i32, i32), max_len: usize) -> Vec<(i32, i32)> {
+    fn laser_order(&self, origin: (i32, i32), max_len: usize) -> Vec<(i32, i32)> {
         // Result
         let mut ret: Vec<(i32, i32)> = Vec::with_capacity(self.rocks.len() - 1); // All rocks will be removed less the one we are perched on (@origin)\
-        let mut temp: Vec<(Rock)> = Vec::with_capacity(self.rocks.len() - 1);
+        let mut temp: Vec<Rock> = Vec::with_capacity(self.rocks.len() - 1);
 
         // Build list of rocks sorted by angle then by occlusions
-        for r in self.rocks.iter() {
+        for &r in self.rocks.iter() {
             // Skip over origin point
             if r != origin {
-                temp.push(Rock::new(origin, self, &r));
+                temp.push(Rock::new(origin, self, r));
             }
         }
 
@@ -198,23 +193,21 @@ impl Field {
 
         // Sort rocks
         let temp_len = temp.len();
-        let mut temp_slice = temp.as_mut_slice();
+        let temp_slice = temp.as_mut_slice();
         temp_slice.sort_by(|a, b| a.partial_cmp(b).unwrap());
 
         // Iterate through temp and push into ret until there are none left (or max length is satisfied)
         while temp_len > ret.len() && ret.len() < max_len {
             // Iterate over all rocks, pushing unoccluded rocks into ret, and assuming that on each pass through an occluded rock has one of its occlusions blasted
             for val in temp_slice.iter() {
-                if val.occlusions == 0 {
-                    if destroyed.insert(val.coord) {
-                        ret.push(val.coord);
-                    }
+                if val.occlusions == 0 && destroyed.insert(val.coord) {
+                    ret.push(val.coord);
                 }
             }
             // Update occlusions (assuming all occlusions get decremented on each pass around)
-            for i in 0..temp_slice.len() {
-                if temp_slice[i].occlusions > 0 {
-                    temp_slice[i].occlusions -= 1;
+            for t in temp_slice.iter_mut() {
+                if t.occlusions > 0 {
+                    t.occlusions -= 1;
                 }
             }
         }
@@ -229,13 +222,14 @@ impl fmt::Display for Field {
                 write!(
                     f,
                     "{}",
-                    match self.rocks.contains(&(x, y)) {
-                        true => "#",
-                        false => ".", // should be visually distinct enough
+                    if self.rocks.contains(&(x, y)) {
+                        '#'
+                    } else {
+                        '.'
                     }
                 )?;
             }
-            writeln!(f, "")?; // newlines in between each row
+            writeln!(f)?; // newlines in between each row
         }
         Ok(())
     }
@@ -256,11 +250,11 @@ fn main() -> std::io::Result<()> {
     let mut best_rock: (i32, i32) = (0, 0);
     let mut best_count: usize = 0;
 
-    for r in f.rocks.iter() {
+    for &r in f.rocks.iter() {
         let count = f.count_visible(r);
         if count > best_count {
             best_count = count;
-            best_rock = *r;
+            best_rock = r;
         }
     }
 
@@ -270,7 +264,7 @@ fn main() -> std::io::Result<()> {
     );
 
     // For the best rock, get the 200th asteroid to be lasered
-    let order = f.laser_order(&best_rock, 200);
+    let order = f.laser_order(best_rock, 200);
     println!("200th rock to be lasered is {:?}", order[199]);
 
     Ok(())

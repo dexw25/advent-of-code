@@ -347,6 +347,7 @@ pub fn prog_from_file(path: &str) -> Vec<i64> {
     std::str::from_utf8(buf)
         .unwrap()
         .trim()
+        .trim_end_matches(',')
         .split(',')
         .map(|x| x.parse::<i64>().unwrap())
         .collect()
