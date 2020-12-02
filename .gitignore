@@ -5,3 +5,5 @@ target/
 2019/day_*/Cargo.lock
 /2019/intcode/Cargo.lock
 .DS_Store
+
+cmake-build-*

@@ -1,0 +1,6 @@
+[submodule "2020/extern/googletest"]
+	path = 2020/extern/googletest
+	url = git://github.com:/google/googletest
+[submodule "2020/extern/fmt"]
+	path = 2020/extern/fmt
+	url = git@github.com:/fmtlib/fmt
