@@ -1,10 +1,7 @@
-set (Boost_USE_STATIC_LIBS OFF)
+add_executable(day1_tests test_day1.cpp)
+target_link_libraries(day1_tests day_01)
+add_test(NAME day1 COMMAND day1_tests)
 
-# see https://cmake.org/cmake/help/latest/module/FindBoost.html
-find_package(Boost REQUIRED COMPONENTS unit_test_framework)
-
-include_directories(${Boost_INCLUDE_DIR})
-
-add_executable (Boost_Tests_run test_day1.cpp)
-target_link_libraries (Boost_Tests_run ${Boost_LIBRARIES})
-target_link_libraries(Boost_Tests_run day_01)
+add_executable(day2_tests test_day2.cpp)
+target_link_libraries(day2_tests day_02)
+add_test(NAME day2 COMMAND day2_tests)

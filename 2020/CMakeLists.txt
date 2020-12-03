@@ -16,4 +16,5 @@ add_executable(run_all main.cpp)
 
 target_link_libraries(run_all fmt::fmt day_01)
 
+enable_testing()
 add_subdirectory(tests)
