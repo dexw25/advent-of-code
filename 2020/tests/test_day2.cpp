@@ -11,26 +11,20 @@ constexpr std::array<const char *, 3> in = {{
                                                     "2-9 c: ccccccccc"
                                             }};
 
-void day2_1_test()
-{
-    constexpr auto out = day_02_1(in);
-    static_assert( out == 2);
+void day2_1_test() {
+    static_assert(day_02_1(in) == 2);
 }
 
-void day2_2_test()
-{
-    constexpr int out = day_02_2(in);
-    static_assert( out == 1);
+void day2_2_test() {
+    static_assert(day_02_2(in) == 1);
 }
 
-void day2_1_actual(){
-    constexpr int out = day_02_1(day_02_data);
-    static_assert (out == 401);
+void day2_1_actual() {
+    static_assert(day_02_1(day_02_data) == 401);
 }
 
-void day2_2_actual(){
-    constexpr int out = day_02_2(day_02_data);
-    static_assert (out == 688);
+void day2_2_actual() {
+    static_assert(day_02_2(day_02_data) == 688);
 }
 
 int main() {

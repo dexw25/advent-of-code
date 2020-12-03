@@ -16,24 +16,20 @@ constexpr std::array<int, 6> in = {1721,
 void day1_1_test()
 {
     // Test that constexpr evaluation works with constexpr inputs
-    constexpr auto out = day_01_1(in);
-    static_assert( out == 514579);
+    static_assert( day_01_1(in) == 514579);
 }
 
 void day1_1_actual() {
-    constexpr auto out = day_01_1(day_01_data);
-    static_assert(out == 138379);
+    static_assert(day_01_1(day_01_data) == 138379);
 }
 
 void day1_2_test()
 {
-    constexpr auto out = day_01_2(in);
-    static_assert( out == 241861950);
+    static_assert( day_01_2(in) == 241861950);
 }
 
 void day1_2_actual() {
-    constexpr auto out = day_01_2(day_01_data);
-    static_assert(out == 85491920);
+    static_assert(day_01_2(day_01_data) == 85491920);
 }
 
 int main() {
