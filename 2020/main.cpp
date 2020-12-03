@@ -4,6 +4,8 @@
 
 #include "day_01.hpp"
 #include "day_01_input.hpp"
+#include "day_02.hpp"
+#include "day_02_input.hpp"
 #include <fmt/format.h>
 
 int main() {
@@ -13,4 +15,9 @@ int main() {
     constexpr auto res1_2 = day_01_2(day_01_data);
     puts(fmt::format("Day1_2: {}", res1_2).c_str());
 
+    constexpr auto res2_1 = day_02_1(day_02_data);
+    puts(fmt::format("Day2_1: {}", res2_1).c_str());
+
+    constexpr auto res2_2 = day_02_2(day_02_data);
+    puts(fmt::format("Day2_2: {}", res2_2).c_str());
 }

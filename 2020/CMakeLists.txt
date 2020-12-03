@@ -11,10 +11,11 @@ add_compile_options(-Wall -Wextra -Wshadow -Wnon-virtual-dtor -Wpedantic)
 add_subdirectory(extern/fmt)
 
 add_subdirectory(day_01)
+add_subdirectory(day_02)
 
 add_executable(run_all main.cpp)
 
-target_link_libraries(run_all fmt::fmt day_01)
+target_link_libraries(run_all fmt::fmt day_01 day_02)
 
 enable_testing()
 add_subdirectory(tests)
