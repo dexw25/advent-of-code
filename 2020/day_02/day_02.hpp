@@ -13,11 +13,15 @@ constexpr bool is_digit(const char c) {
     return (c >= '0' && c <= '9');
 }
 
-// Convert base 10 ints with some basic recursion
-constexpr int stoi(const char *str, int val = 0) {
+// Special case for hex digits
+constexpr bool is_hexdigit(const char c) {
+    return ((c >= '0' && c <= '9') || (c >= 'a' && c <= 'f'));
+}
+// Convert ints with some basic recursion
+constexpr int stoi_impl(const char *str, int val = 0) {
     if (*str) {
         if (is_digit(*str)) {
-            return stoi(str + 1, *str - '0' + val * 10);
+            return stoi_impl(str + 1, *str - '0' + val * 10);
         }
     }
     return val;
@@ -40,9 +44,9 @@ constexpr int day_02_1(T input){
     // NN is 1-2 digit int, min for total X's in input, second NN is max
     std::for_each(input.begin(), input.end(), [&valid] (auto i) {
         // Parse min and max
-        int min = stoi(i);
+        int min = stoi_impl(i);
         i = strchr(i, '-')+1;
-        int max = stoi(i);
+        int max = stoi_impl(i);
 
         // Seek to input char
         i = strchr(i, ' ')+1;
@@ -74,9 +78,9 @@ constexpr int day_02_2(T input){
     // NN is 1-2 digit int, min for total X's in input, second NN is max
     std::for_each(input.begin(), input.end(), [&valid] (auto i) {
         // Parse min and max
-        int min = stoi(i);
+        int min = stoi_impl(i);
         i = strchr(i, '-')+1;
-        int max = stoi(i);
+        int max = stoi_impl(i);
 
         // Seek to input char
         i = strchr(i, ' ')+1;
