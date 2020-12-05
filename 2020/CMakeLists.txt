@@ -14,13 +14,14 @@ add_subdirectory(day_01)
 add_subdirectory(day_02)
 add_subdirectory(day_03)
 add_subdirectory(day_04)
+add_subdirectory(day_05)
 
 # Cross deps
 target_link_libraries(day_04 INTERFACE day_02)
 
 add_executable(run_all main.cpp)
 
-target_link_libraries(run_all fmt::fmt day_01 day_02 day_03 day_04)
+target_link_libraries(run_all fmt::fmt day_01 day_02 day_03 day_04 day_05)
 
 enable_testing()
 add_subdirectory(tests)
