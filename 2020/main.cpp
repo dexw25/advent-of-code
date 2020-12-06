@@ -12,6 +12,8 @@
 #include "day_04_input.h"
 #include "day_05.h"
 #include "day_05_input.h"
+#include "day_06.h"
+#include "day_06_input.h"
 #include <fmt/format.h>
 
 int main() {
@@ -29,4 +31,8 @@ int main() {
 
     puts(fmt::format("Day5_1: {}", day_05_1(day_05_data)).c_str());
     puts(fmt::format("Day5_2: {}", day_05_2(day_05_data)).c_str());
+
+    puts(fmt::format("Day6_1: {}", day_06_1(day_06_data)).c_str());
+    puts(fmt::format("Day6_2: {}", day_06_2(day_06_data)).c_str());
+
 }
