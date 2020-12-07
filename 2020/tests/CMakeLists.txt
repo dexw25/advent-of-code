@@ -21,3 +21,7 @@ add_test(NAME day5 COMMAND day5_tests)
 add_executable(day6_tests test_day6.cpp)
 target_link_libraries(day6_tests day_06)
 add_test(NAME day6 COMMAND day6_tests)
+
+add_executable(day7_tests test_day7.cpp)
+target_link_libraries(day7_tests day_07)
+add_test(NAME day7 COMMAND day7_tests)
