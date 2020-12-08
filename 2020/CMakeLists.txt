@@ -23,7 +23,7 @@ add_subdirectory(gconsole)
 
 # Cross deps
 target_link_libraries(day_04 INTERFACE day_02)
-target_link_libraries(day_08 PRIVATE gconsole)
+target_link_libraries(day_08 INTERFACE gconsole)
 
 add_executable(run_all main.cpp)
 
