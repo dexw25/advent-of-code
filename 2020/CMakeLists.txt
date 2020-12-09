@@ -18,6 +18,7 @@ add_subdirectory(day_05)
 add_subdirectory(day_06)
 add_subdirectory(day_07)
 add_subdirectory(day_08)
+add_subdirectory(day_09)
 
 add_subdirectory(gconsole)
 
@@ -27,7 +28,7 @@ target_link_libraries(day_08 INTERFACE gconsole)
 
 add_executable(run_all main.cpp)
 
-target_link_libraries(run_all fmt::fmt day_01 day_02 day_03 day_04 day_05 day_06 day_07 day_08)
+target_link_libraries(run_all fmt::fmt day_01 day_02 day_03 day_04 day_05 day_06 day_07 day_08 day_09)
 
 enable_testing()
 add_subdirectory(tests)
