@@ -34,6 +34,10 @@ add_executable(day9_tests test_day9.cpp)
 target_link_libraries(day9_tests day_09)
 add_test(NAME day9 COMMAND day9_tests)
 
+add_executable(day10_tests test_day10.cpp)
+target_link_libraries(day10_tests day_10)
+add_test(NAME day10 COMMAND day10_tests)
+
 add_executable(gconsole_tests test_gconsole.cpp)
 target_link_libraries(gconsole_tests gconsole)
 add_test(NAME gconsole COMMAND gconsole_tests)
