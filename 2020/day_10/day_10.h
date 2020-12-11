@@ -10,7 +10,9 @@
 using namespace std;
 
 // Pass array by copy to allow modification
-template <size_t N> constexpr int day_10_1(const array<int, N> &in) {
+// This would be constexpr except for appleclang being stuck at an older version of LLVM (10 vs 11)
+template <typename Array>
+int day_10_1(const Array &in) {
   int ones = 0, threes = 0;
 
   auto tmp = in;
