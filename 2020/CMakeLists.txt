@@ -20,6 +20,7 @@ add_subdirectory(day_07)
 add_subdirectory(day_08)
 add_subdirectory(day_09)
 add_subdirectory(day_10)
+add_subdirectory(day_11)
 
 add_subdirectory(gconsole)
 
