@@ -14,13 +14,14 @@ impl Ferry {
         let mut w = 0;
         // Count row length
         for c in input.chars() {
-            if c != '\n' { w += 1 } else { break; }
+            w += 1;
+            if c == '\n' { break }
         }
 
         Ferry {
             state: input.chars().collect(),
             next: input.chars().collect(),
-            width: w + 1, // Make it so adding this selects the next row, and subtracting the previous row
+            width: w, // Make it so adding this selects the next row, and subtracting the previous row
         }
     }
     // Address the grid with bounds checking (do not mask '\n' here)
@@ -172,8 +173,7 @@ impl Ferry {
                     }
                 }
                 _ => {
-                    assert!(false);
-                    0
+                    unreachable!();
                 }
             }
         }

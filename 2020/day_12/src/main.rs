@@ -14,7 +14,7 @@ impl Ferry {
     }
 
     fn manhattan_dist(&self) -> u32 {
-        return (self.pos.0.abs() + self.pos.1.abs()) as u32;
+         (self.pos.0.abs() + self.pos.1.abs()) as u32
     }
 
     // Move the ship cursor the specified number of units in the given angle
@@ -82,22 +82,17 @@ impl Ferry {
     }
 
     // Transform a waypoint, rotate around ship
-    //  It was a mistake to try this with rectangular coordinates, trig is so obvious
-    fn wp_transform(&mut self, dir: i32) {
-        // Calculate magnitude and angle
-        let mag = (self.way.0.pow(2) as f64 + self.way.1.pow(2) as f64).sqrt();
-        let mut angle = (self.way.1 as f64).atan2(self.way.0 as f64); // Y/X
+    //  The real mistake was doing this too late at night to understand vector transformations
+    fn wp_transform(&mut self, mut dir: i32) {
+        if dir < 0 {dir += 360;}
 
-        // Add angle
-        angle += (dir as f64).to_radians();
-
-        // Convert back to X and Y
-        let (rise, run) = angle.sin_cos();
-        let new_x = run * mag;
-        let new_y = rise * mag;
-
-        // Return to integer representation, rounding away (minimal) approximation errors
-        self.way = (new_x.round() as i32, new_y.round() as i32);
+        self.way = match dir {
+            0 => { self.way },
+            90 => {(-self.way.1, self.way.0)},
+            180 => {(-self.way.0, -self.way.1)},
+            270 => {(self.way.1, -self.way.0)},
+            _ => {unreachable!()} // Input is such that this can't really happen
+        }
     }
 
     // Execute a single step with waypoints factored in
