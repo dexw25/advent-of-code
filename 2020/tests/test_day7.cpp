@@ -3,6 +3,7 @@
 //
 
 #include <string_view>
+#include <cassert>
 #include "day_07.h"
 #include "day_07_input.h"
 

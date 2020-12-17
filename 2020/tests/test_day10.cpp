@@ -4,6 +4,7 @@
 
 #include "day_10.h"
 #include <array>
+#include <cassert>
 
 using namespace std;
 

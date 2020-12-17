@@ -9,6 +9,7 @@
 #include <tuple>
 #include <array>
 #include <limits>
+#include <cassert>
 
 using namespace std;
 
