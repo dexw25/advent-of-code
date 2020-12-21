@@ -3,7 +3,7 @@ set(CMAKE_CXX_STANDARD 20)
 set(CXX_EXTENSIONS ON)
 
 project(AOC_2020)
-set(CONAN_DISABLE_CHECK_COMPILER)
+set(CONAN_DISABLE_CHECK_COMPILER) # Conan seems to care if we use appleclang or llvm clang
 include(conan.cmake)
 conan_cmake_run(REQUIRES fmt/7.1.3
         BASIC_SETUP CMAKE_TARGETS

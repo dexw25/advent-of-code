@@ -30,7 +30,7 @@ fn day_13_2(input: &str) -> u64 {
     let mut inc = rates[0];
     let mut t: u64 = 0;
 
-    // This is a CRT sieve: https://en.wikipedia.org/wiki/Chinese_remainder_theorem#Computation
+    // This is a CRT sieve (works because all inputs are coprime): https://en.wikipedia.org/wiki/Chinese_remainder_theorem#Computation
     // Step across the following buses, and bump the candidate first timestamp until the modulo test passes
     for (i, bus) in rates[1..].iter().enumerate() {
         // Bump first bus until the next bus's departure is 1 beyond the current
