@@ -84,15 +84,12 @@ fn main() -> Result<(), ()> {
     let i = sacks?.iter();
     let mut sum: u32 = 0;
 
-    loop {
-        let s_1 = i.next().ok_or(())?;
+    // Loop through, iterating through groups of 3
+    whie let Some(s_1) = i.next() {
         let s_2 = i.next().ok_or(())?;
         let s_3 = i.next().ok_or(())?;
 
-        if i.is_empty() {
-            break;
-        }
-    }
+    };
 
     println!("p2: {sum}");
     Ok(())
