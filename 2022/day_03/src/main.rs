@@ -1,44 +1,46 @@
-use std::{
-    collections::{hash_set::Union, HashSet},
-    hash::BuildHasher,
-    str::FromStr,
-};
+use std::{collections::HashSet, str::FromStr};
+
+use itertools::Itertools;
 
 #[derive(Debug, Default, Clone)]
 struct RuckSack {
-    pockets: [HashSet<Item>; 2],
+    pockets: (HashSet<Item>, HashSet<Item>),
 }
 
-impl RuckSack {
-    fn all_items<'a, S: BuildHasher>(&'a self) -> Union<'a, Item, S> {
-        self.pockets[0].union(&self.pockets[1])
+mod item {
+    #[derive(Debug, Hash, Clone, PartialEq, Eq, Copy)]
+    pub struct Item {
+        value: u8,
     }
-}
 
-#[derive(Debug, Hash, Clone, PartialEq, Eq, Copy)]
-struct Item {
-    priority: u32,
-}
+    impl TryFrom<u8> for Item {
+        type Error = ();
 
-impl TryFrom<char> for Item {
-    type Error = ();
+        fn try_from(value: u8) -> Result<Self, Self::Error> {
+            match value {
+                b'A'..=b'Z' => {
+                    let val = value - b'A' + 27;
 
-    fn try_from(value: char) -> Result<Self, Self::Error> {
-        match value {
-            'A'..='Z' => {
-                let val = value as u32 - 'A' as u32 + 27;
+                    Ok(Self { value: val })
+                }
+                b'a'..=b'z' => {
+                    let val = value - b'a' + 1;
 
-                Ok(Self { priority: val })
+                    Ok(Self { value: val })
+                }
+                _ => Err(()),
             }
-            'a'..='z' => {
-                let val = value as u32 - 'a' as u32 + 1;
+        }
+    }
 
-                Ok(Self { priority: val })
-            }
-            _ => Err(()),
+    impl Item {
+        pub(crate) const fn priority(self) -> u32 {
+            self.value as u32
         }
     }
 }
+
+use item::Item;
 
 #[allow(clippy::needless_range_loop)]
 impl FromStr for RuckSack {
@@ -47,18 +49,18 @@ impl FromStr for RuckSack {
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let mut sack = Self::default();
 
-        let items = s
-            .chars()
+        let mut items = s
+            .bytes()
             .map(Item::try_from)
             .collect::<Result<Vec<Item>, ()>>()?;
 
         let pouch_size = items.len() / 2;
 
-        for i in 0..pouch_size {
-            sack.pockets[0].insert(items[i]);
+        for _i in 0..pouch_size {
+            sack.pockets.0.insert(items.pop().ok_or(())?);
         }
-        for i in 0..pouch_size {
-            sack.pockets[1].insert(items[i + pouch_size]);
+        for _i in 0..pouch_size {
+            sack.pockets.1.insert(items.pop().ok_or(())?);
         }
 
         Ok(sack)
@@ -66,31 +68,51 @@ impl FromStr for RuckSack {
 }
 
 fn main() -> Result<(), ()> {
-    let sacks: Result<Vec<RuckSack>, ()> =
-        include_str!("input.txt").lines().map(str::parse).collect();
+    let sacks = include_str!("input.txt")
+        .lines()
+        .map(str::parse::<RuckSack>)
+        .collect::<Result<Vec<_>, _>>()?;
 
-    let part1: u32 = sacks?
+    let part1: u32 = sacks
         .iter()
         .map(|s| {
-            s.pockets[0]
-                .intersection(&s.pockets[1])
-                .map(|i| i.priority)
+            s.pockets
+                .0
+                .intersection(&s.pockets.1)
+                .copied()
+                .map(item::Item::priority)
                 .sum::<u32>()
         })
         .sum();
 
     println!("p1: {part1}");
 
-    let i = sacks?.iter();
-    let mut sum: u32 = 0;
+    // Iterate over chunks of 3
+    #[allow(clippy::expect_used)]
+    let sum: u32 = sacks
+        .into_iter()
+        .chunks(3)
+        .into_iter()
+        .map(|chunk| {
+            chunk
+                .map(|sack| {
+                    let mut s: HashSet<Item> = HashSet::new();
+                    s.extend(&sack.pockets.0);
+                    s.extend(&sack.pockets.1);
+                    s
+                })
+                .reduce(|mut a, s| {
+                    a.retain(|e| s.contains(e));
+                    a
+                })
+                .expect("no input?")
+                .iter()
+                .next()
+                .expect("No common items?")
+                .priority()
+        })
+        .sum();
 
-    // Loop through, iterating through groups of 3
-    whie let Some(s_1) = i.next() {
-        let s_2 = i.next().ok_or(())?;
-        let s_3 = i.next().ok_or(())?;
-
-    };
-
-    println!("p2: {sum}");
+    println!("p2: {sum:?}");
     Ok(())
 }
