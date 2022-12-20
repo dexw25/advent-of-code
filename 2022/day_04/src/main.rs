@@ -38,7 +38,10 @@ mod section {
 
         // Another way of stating overlaps is if the other assignment contains the start or end of this one
         pub fn overlaps(&self, other: &Self) -> bool {
-            self.range.contains(other.range.start()) || self.range.contains(other.range.end())
+            self.range.contains(other.range.start())
+                || self.range.contains(other.range.end())
+                // Make sure to include complete containment, as this also counts for overlap
+                || self.contains(other)
         }
     }
 }
@@ -71,12 +74,7 @@ fn main() -> color_eyre::Result<()> {
 
     dbg!(day_02p1);
 
-    let day_02p2 = data
-        .iter()
-        .inspect(|a| println!("{},{}...", a.0, a.1))
-        .filter(|pair| pair.0.overlaps(&pair.1))
-        .inspect(|a| println!("{},{}OVERLAP", a.0, a.1))
-        .count();
+    let day_02p2 = data.iter().filter(|pair| pair.0.overlaps(&pair.1)).count();
     dbg!(day_02p2);
 
     Ok(())
