@@ -1,22 +1,29 @@
 use core::str::FromStr;
 use std::collections::HashSet;
 
+use std::collections::VecDeque;
+
 #[derive(Debug)]
 pub struct Card {
-    id: usize,
-    have: HashSet<u32>,
-    winning: HashSet<u32>,
+    _id: usize,
+    have: HashSet<u64>,
+    winning: HashSet<u64>,
 }
 
 impl Card {
     #[must_use]
-    pub fn score(&self) -> u32 {
+    pub fn score(&self) -> u64 {
         let total = self.winning.intersection(&self.have).count();
         if total == 0 {
             0
         } else {
             1 << (total - 1)
         }
+    }
+
+    #[must_use]
+    pub fn num_wins(&self) -> usize {
+        self.winning.intersection(&self.have).count()
     }
 }
 
@@ -52,6 +59,50 @@ impl FromStr for Card {
             .collect();
         let winning = winningres?;
 
-        Ok(Self { id, have, winning })
+        Ok(Self {
+            _id: id,
+            have,
+            winning,
+        })
+    }
+}
+
+pub struct CardsP2<T> {
+    offsets: VecDeque<u64>,
+    cards: T,
+}
+
+pub fn part_two<T: Iterator<Item = Card>>(cards: T) -> CardsP2<T> {
+    CardsP2 {
+        offsets: VecDeque::new(),
+        cards,
+    }
+}
+
+impl<T: Iterator<Item = Card>> Iterator for CardsP2<T> {
+    type Item = u64;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        let c = self.cards.next()?;
+        dbg!(&self.offsets);
+        // dbg!(&c);
+        let cards_inhand = match self.offsets.pop_front() {
+            Some(o) => o + 1,
+            None => 1,
+        };
+
+        let wins = c.num_wins();
+        let mut i = 0;
+        while i < wins {
+            if let Some(o) = self.offsets.get_mut(i) {
+                *o += cards_inhand;
+            } else {
+                self.offsets.push_back(cards_inhand);
+            }
+
+            i += 1;
+        }
+        // dbg!(wins, cards_inhand);
+        Some(cards_inhand)
     }
 }
