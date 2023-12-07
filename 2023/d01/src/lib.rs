@@ -87,6 +87,7 @@ impl DoubleEndedIterator for Tokenizer<'_> {
 }
 
 #[cfg(test)]
+#[allow(clippy::unwrap_used)]
 mod test {
     use super::sum_calibrations;
     use super::tokenize;

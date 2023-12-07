@@ -1,0 +1,4 @@
+{
+    "salt.errorLogging": true,
+    "cmake.configureOnOpen": false
+}
