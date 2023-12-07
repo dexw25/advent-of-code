@@ -6,5 +6,9 @@ fn main() {
     let sch = Schematic::new(input);
     let sch_i = sch.part_numbers_iter().unwrap();
 
-    dbg!(sch_i.sum::<u32>());
+    dbg!(sch_i.sum::<u64>());
+
+    let sch_g = sch.gear_ratios_iter();
+
+    dbg!(sch_g.sum::<u64>());
 }
