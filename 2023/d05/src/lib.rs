@@ -1,6 +1,6 @@
 #![feature(iterator_try_collect)]
 
-use core::str::FromStr;
+use core::{slice::sort, str::FromStr};
 use std::collections::HashMap;
 
 #[derive(Debug)]
@@ -15,12 +15,33 @@ impl Almanac {
     /// # Errors
     /// - If the chain of types in the stored mappings has a dead end and does not eventually resolve to the target type
     /// - This will actually also infinitely recur if used on a looping structure so... dont do that.
-    pub fn map(
+    pub fn map_find_min(
         &self,
         kind: &Kind,
         val: usize,
+        len: usize,
         target_kind: &Kind,
     ) -> Result<(usize, Kind), &'static str> {
+        let mut current_kind = kind;
+        let mut current_val = val;
+
+        // stores the current potential ranges. Reduce to find minimum at the end
+        let current_range = vec![(val, len)];
+
+        while current_kind != target_kind {
+            let (new_kind, map) = self.maps.get(current_kind).ok_or("No mapping for kind")?;
+
+            let new_ranges = vec![];
+
+            current_val = map
+                .iter()
+                .filter_map(|m| m.try_map(current_val))
+                .next()
+                .unwrap_or(current_val);
+
+            current_kind = new_kind;
+        }
+
         if let Some((dst_kind, map)) = self.maps.get(kind) {
             let mapped: Vec<usize> = map.iter().filter_map(|m| m.try_map(val)).collect();
 
@@ -29,7 +50,7 @@ impl Almanac {
             if dst_kind == target_kind {
                 Ok((final_mapped, *dst_kind))
             } else {
-                self.map(dst_kind, final_mapped, target_kind)
+                self.map_find_min(dst_kind, final_mapped, 1, target_kind)
             }
         } else {
             Err("Could not resolve types")
@@ -42,9 +63,32 @@ impl Almanac {
         let temp: Result<Vec<(usize, Kind)>, _> = self
             .to_plant
             .iter()
-            .map(|s| self.map(&Kind::Seed, *s, &Kind::Location))
+            .map(|s| self.map_find_min(&Kind::Seed, *s, 1, &Kind::Location))
             .collect();
         temp?.iter().map(|v| v.0).min().ok_or("Empty iter??")
+    }
+
+    /// Largely the same as the last one, reinterpret seeds differently though
+    /// # Errors
+    ///
+    /// # Panics
+    pub fn min_seed_loc_v2(&self) -> Result<usize, &str> {
+        let mut seeds = self.to_plant.iter();
+
+        let mut min_location = usize::MAX;
+
+        while let Some(seed) = seeds.next() {
+            let length = seeds.next().ok_or("odd no. of seeds?")?;
+            dbg!(seed);
+
+            let (location, _) = self.map_find_min(&Kind::Seed, *seed, *length, &Kind::Location)?;
+
+            if location < min_location {
+                min_location = location;
+            }
+        }
+
+        Ok(min_location)
     }
 }
 
@@ -110,7 +154,6 @@ impl FromStr for AlmanacMapping {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let mut nums = s.split_whitespace().map(str::parse);
-        dbg!(s);
         let destination_start = nums
             .next()
             .ok_or("out of numbers")?
@@ -168,6 +211,9 @@ impl FromStr for Almanac {
                     .filter(|s| !s.is_empty())
                     .map(str::parse)
                     .collect();
+                let mut ranges = ranges?;
+
+                sort::quicksort(ranges, |a, b| {});
 
                 maps.insert(lhs, (rhs, ranges?));
             }
