@@ -1,6 +1,6 @@
 #![feature(iterator_try_collect)]
 
-use core::{slice::sort, str::FromStr};
+use core::str::FromStr;
 use std::collections::HashMap;
 
 #[derive(Debug)]
@@ -22,38 +22,50 @@ impl Almanac {
         len: usize,
         target_kind: &Kind,
     ) -> Result<(usize, Kind), &'static str> {
+        const NOP_MAP: AlmanacMapping = AlmanacMapping {
+            len: 0,
+            source_start: usize::MAX,
+            destination_start: usize::MAX,
+        };
+        // stores the current ranges mapped. Reduce to find minimum at the end
+        // Initialize to simply one range, the input
         let mut current_kind = kind;
-        let mut current_val = val;
+        let mut current_range = vec![val..(val + len)];
 
-        // stores the current potential ranges. Reduce to find minimum at the end
-        let current_range = vec![(val, len)];
-
+        // Loop through mappings until kind matches target
         while current_kind != target_kind {
-            let (new_kind, map) = self.maps.get(current_kind).ok_or("No mapping for kind")?;
+            if let Some((new_kind, maps)) = self.maps.get(current_kind) {
+                let mut new_ranges = vec![];
 
-            let new_ranges = vec![];
+                current_kind = new_kind;
+                let mut old_ranges = current_range.into_iter();
+                let mut maps = maps.iter();
 
-            current_val = map
-                .iter()
-                .filter_map(|m| m.try_map(current_val))
-                .next()
-                .unwrap_or(current_val);
+                let map: Option<&AlmanacMapping> = maps.next();
 
-            current_kind = new_kind;
-        }
+                while let Some(src) = old_ranges.next() {
+                    if src.start < map.unwrap_or(&NOP_MAP).source_start {
+                        let subsegment_length =
+                            if src.contains(&map.unwrap_or(&NOP_MAP).source_start) {
+                                map.unwrap_or(&NOP_MAP).source_start - src.start
+                            } else {
+                                src.count()
+                            };
 
-        if let Some((dst_kind, map)) = self.maps.get(kind) {
-            let mapped: Vec<usize> = map.iter().filter_map(|m| m.try_map(val)).collect();
-
-            let final_mapped = if mapped.is_empty() { val } else { mapped[0] };
-
-            if dst_kind == target_kind {
-                Ok((final_mapped, *dst_kind))
+                        // Push unmapped section
+                        new_ranges.push((src.start, subsegment_length));
+                    }
+                }
+                // Ranges should all be mapped
+                current_range = new_ranges;
             } else {
-                self.map_find_min(dst_kind, final_mapped, 1, target_kind)
+                break;
             }
+        }
+        if current_kind == target_kind {
+            unimplemented!()
         } else {
-            Err("Could not resolve types")
+            Err("Could not resolve type conversions")
         }
     }
 
@@ -202,20 +214,21 @@ impl FromStr for Almanac {
                     .ok_or(format!("Key parse error from {key}"))?;
 
                 let mut t = kinds.split('-');
-                let lhs = t.next().ok_or("no src kind")?.parse()?;
+                let lhs: Kind = t.next().ok_or("no src kind")?.parse()?;
                 let _ = t.next().ok_or("empty iter")?;
-                let rhs = t.next().ok_or("no src kind")?.parse()?;
+                let rhs: Kind = t.next().ok_or("no src kind")?.parse()?;
 
-                let ranges: Result<Vec<_>, _> = val
+                let ranges: Result<Vec<AlmanacMapping>, _> = val
                     .lines()
                     .filter(|s| !s.is_empty())
                     .map(str::parse)
                     .collect();
                 let mut ranges = ranges?;
 
-                sort::quicksort(ranges, |a, b| {});
+                // Necessary for later step
+                ranges.sort_by_key(|r| r.source_start);
 
-                maps.insert(lhs, (rhs, ranges?));
+                maps.insert(lhs, (rhs, ranges));
             }
         }
 
